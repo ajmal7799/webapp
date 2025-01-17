@@ -1,0 +1,71 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Add New Book</h3>
+                </div>
+                <div class="card-body">
+                    <form action="/admin/addProduct" method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="title" class="form-label">Book Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="author_name" class="form-label">Author Name</label>
+                                <input type="text" class="form-control" id="author_name" name="author_name" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="category_id" class="form-label">Category</label>
+                                <select class="form-select" id="category_id" name="category_id" required>
+                                    <option value="">Select Category</option>
+                                    <!-- Remove the forEach loop for now -->
+                                    <option value="fiction">Fiction</option>
+                                    <option value="non-fiction">Non-Fiction</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="price" class="form-label">Price (₹)</label>
+                                <input type="number" class="form-control" id="price" name="price" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="available_quantity" class="form-label">Stock Quantity</label>
+                                <input type="number" class="form-control" id="available_quantity" name="available_quantity" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="stock_state" class="form-label">Stock Status</label>
+                                <select class="form-select" id="stock_state" name="stock_state" required>
+                                    <option value="In Stock">In Stock</option>
+                                    <option value="Out of Stock">Out of Stock</option>
+                                    <option value="Low Stock">Low Stock</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="product_imgs" class="form-label">Book Images</label>
+                                <input type="file" class="form-control" id="product_imgs" name="product_imgs" multiple required>
+                                <small class="text-muted">You can select multiple images</small>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Add Book</button>
+                                <a href="/admin/products" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,41 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f8f9fa;
+  }
+  .sign-in-form {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 350px;
+    width: 100%;
+  }
+  .form-control {
+    background-color: #f6f6f6;
+    border: none;
+    border-radius: 5px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+  .form-control:focus {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  .btn-sign-in {
+    background-color: #4b2e1a;
+    color: #fff;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 5px;
+    width: 100%;
+    font-size: 1rem;
+  }
+  .btn-sign-in:hover {
+    background-color: #3a2414;
+  }

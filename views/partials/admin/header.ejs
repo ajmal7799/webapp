@@ -1,0 +1,299 @@
+
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Book Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/perfect-scrollbar@1.5.5/css/perfect-scrollbar.min.css" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: white ;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .navbar-aside {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 40;
+            background-color: #b0d5de;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease;
+        }
+
+        .main-wrap {
+            margin-left: 250px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-header {
+            height: 70px;
+            background-color: #8da7ab;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 250px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-aside {
+            padding: 0.5rem 0;
+            list-style: none;
+        }
+
+        .menu-item {
+            position: relative;
+        }
+
+        .menu-link {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #310505;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .menu-link i {
+            width: 24px;
+            margin-right: 10px;
+            font-size: 1.25rem;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            background-color: #6e7e6e;
+            color: #ffffff;
+        }
+
+        .aside-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-wrap {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+        }
+
+        .brand-wrap .logo {
+            max-height: 40px;
+        }
+
+        .screen-overlay {
+            width: 0%;
+            height: 100%;
+            z-index: 30;
+            position: fixed;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            visibility: hidden;
+            background-color: rgba(34, 34, 34, 0.6);
+            transition: 0.3s;
+        }
+
+        .col-nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+
+        .dropdown-menu {
+            background-color: #bb9aaf;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item {
+            padding: 8px 16px;
+            color: #310505;
+        }
+
+        .dropdown-item:hover {
+            background-color: #33053d;
+            color: #ffffff;
+        }
+
+        .img-xs {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .content-main {
+            padding: 30px;
+            margin-top: 70px;
+        }
+
+        .content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .content-title {
+            color: #212529;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+        .bb{
+                margin-top: 200px;
+                background-color: #212529;
+            }
+
+        @media (max-width: 992px) {
+            .navbar-aside {
+                left: -250px;
+            }
+
+            .main-wrap {
+                margin-left: 0;
+            }
+
+            .main-header {
+                left: 0;
+            }
+
+            .navbar-aside.show {
+                left: 0;
+            }
+
+            .screen-overlay.show {
+                visibility: visible;
+                opacity: 1;
+                width: 100%;
+            }
+
+            .btn-mobile {
+                display: block;
+            }
+            
+            
+        }
+    </style>
+</head>
+
+<body>
+    <div class="screen-overlay"></div>
+    <aside class="navbar-aside" id="offcanvas_aside">
+        <div class="aside-top">
+            <a href="#" class="brand-wrap">
+                <img src="/img/logo.png" class="logo" alt="Men Fashion Dashboard">
+            </a>
+            <div>
+                <button class="btn btn-icon btn-aside-minimize">
+                    <i class="material-icons">menu_open</i>
+                </button>
+            </div>
+        </div>
+        <nav>
+            <ul class="menu-aside">
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin">
+                        <i class="material-icons">home</i>
+                        <span class="text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/users">
+                        <i class="material-icons">person</i>
+                        <span class="text">Customers</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/category">
+                        <i class="material-icons">category</i>
+                        <span class="text">Category</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/brands">
+                        <i class="material-icons">stars</i>
+                        <span class="text">Brands</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/addProducts">
+                        <i class="material-icons">add_box</i>
+                        <span class="text">Add product</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/products">
+                        <i class="material-icons">shopping_bag</i>
+                        <span class="text">Products</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/coupon">
+                        <i class="material-icons">class</i>
+                        <span class="text">Coupon</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/banner">
+                        <i class="material-icons">photo_size_select_actual</i>
+                        <span class="text">Banner</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" href="/admin/orderList">
+                        <i class="material-icons">shopping_cart</i>
+                        <span class="text">Orders</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-wrap">
+        <header class="main-header navbar">
+            <div class="col-nav">
+                <button class="btn btn-icon btn-mobile me-auto" data-trigger="#offcanvas_aside">
+                    <i class="material-icons">apps</i>
+                </button>
+                <ul class="nav">
+                    <li class="dropdown nav-item">
+                        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownAccount">
+                            <img class="img-xs rounded-circle" src="" alt="User">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownAccount">
+                            <a class="dropdown-item text-danger" href="/admin/logout">
+                                <i class="material-icons">exit_to_app</i>Logout
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </header>

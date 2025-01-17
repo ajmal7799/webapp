@@ -1,0 +1,351 @@
+<%- include('../partials/user/header') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.name %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Add your CSS files here -->
+    <style>
+        .product-gallery {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .main-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .thumbnail-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .thumbnail.active {
+            border-color: #007bff;
+        }
+        .product-info {
+            padding: 1rem;
+        }
+        .price-block {
+            margin: 1rem 0;
+        }
+        .original-price {
+            text-decoration: line-through;
+            color: #666;
+        }
+        .sale-price {
+            color: #ff4444;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .stock-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        .stock-status.in-stock {
+            background-color: #28a745;
+            color: white;
+        }
+        .stock-status.out-stock {
+            background-color: #dc3545;
+            color: white;
+        }
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+
+
+
+
+        .main-image-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .main-image {
+        transition: transform 0.3s ease;
+    }
+
+    .main-image.zoomed {
+        transform: scale(1.5);
+        cursor: zoom-out;
+    }
+
+    .main-image:not(.zoomed) {
+        cursor: zoom-in;
+    }
+
+
+
+
+
+    </style>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Product Images Gallery -->
+            <div class="col-md-6">
+                <div class="product-gallery">
+                    <img id="mainImage" src="<%= product.productImages[0] %>" alt="<%= product.name %>" class="main-image">
+                    <div class="thumbnail-container">
+                        <% product.productImages.forEach((image, index) => { %>
+                            <img src="<%= image %>" 
+                                 alt="Product thumbnail <%= index + 1 %>"
+                                 class="thumbnail <%= index === 0 ? 'active' : '' %>"
+                                 onclick="changeImage(this.src, this)">
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Information -->
+            <div class="col-md-6">
+                <div class="product-info">
+                    <h1 class="product-title"><%= product.name %></h1>
+                    <p class="text-muted">Category: <%= category.name %></p>
+                    
+                    <div class="price-block">
+                        <% if (product.salePrice > 0) { %>
+                            <span class="original-price">₹<%= product.regularPrice %></span>
+                            <span class="sale-price">₹<%= product.salePrice %></span>
+                        <% } else { %>
+                            <span class="sale-price">₹<%= product.regularPrice %></span>
+                        <% } %>
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="stock-status <%= product.availableQuantity > 0 ? 'in-stock' : 'out-stock' %>">
+                            <%= product.availableQuantity > 0 ? 'In Stock' : 'Out of Stock' %>
+                        </span>
+                    </div>
+
+                    <% if (product.availableQuantity > 0) { %>
+                        <div class="quantity-selector">
+                            <label for="quantity">Quantity:</label>
+                            <select id="quantity" class="form-select" style="width: 100px;">
+                                <% for(let i = 1; i <= Math.min(product.availableQuantity, 10); i++) { %>
+                                    <option value="<%= i %>"><%= i %></option>
+                                <% } %>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button onclick="addToCart('<%= product._id %>')" class="btn btn-primary">
+                                Add to Cart
+                            </button>
+                            <button onclick="addToWishlist('<%= product._id %>')" class="btn btn-outline-primary">
+                                Add to Wishlist
+                            </button>
+                        </div>
+                    <% } %>
+
+                    <div class="product-details mt-4">
+                        <h4>Product Details</h4>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td>Writer</td>
+                                    <td><%= product.writer || 'Not specified' %></td>
+                                </tr>
+                                <tr>
+                                    <td>Language</td>
+                                    <td><%= product.language %></td>
+                                </tr>
+                                <tr>
+                                    <td>Published Date</td>
+                                    <td><%= product.publishedDate ? new Date(product.publishedDate).toLocaleDateString() : 'Not specified' %></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="product-description mt-4">
+                        <h4>Description</h4>
+                        <p><%= product.description %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="related-products mt-5">
+            <h3>Related Products</h3>
+            <div class="row"> <% relatedProducts.forEach((related) => { %>
+                 <div class="col-md-4 col-sm-6 mb-4"> 
+                    <div class="related-product-item"> <a href="/productDetails/<%= related._id %>">
+                         <img src="<%= related.productImages[0] %>" alt="<%= related.name %>"> 
+                         <h4><%= related.name %></h4> 
+                         <p class="dprice">₹<%= related.salePrice %></p> 
+                         <p class="price">₹<%= related.regularPrice %></p> </a> 
+                        </div> 
+                    </div> 
+                    <% }); %>
+                 </div>
+
+
+
+
+    </div>
+
+    <script>
+//        function changeImage(src, thumbnail) {
+//     // Get the main image element
+//     const mainImage = document.getElementById('mainImage');
+    
+//     // Safety check to ensure main image exists
+//     if (!mainImage) {
+//         console.error('Main image element not found');
+//         return;
+//     }
+
+//     try {
+//         // Update main image source
+//         mainImage.src = src;
+        
+//         // Get all thumbnails and remove active class
+//         const thumbnails = document.querySelectorAll('.thumbnail');
+//         thumbnails.forEach(thumb => {
+//             thumb.classList.remove('active');
+//         });
+        
+//         // Add active class to clicked thumbnail
+//         thumbnail.classList.add('active');
+//     } catch (error) {
+//         console.error('Error changing image:', error);
+//     }
+// }
+
+
+
+
+
+
+function changeImage(src, thumbnail) {
+        const mainImage = document.getElementById('mainImage');
+        
+        if (!mainImage) {
+            console.error('Main image element not found');
+            return;
+        }
+
+        try {
+            mainImage.src = src;
+            
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            thumbnails.forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            
+            thumbnail.classList.add('active');
+        } catch (error) {
+            console.error('Error changing image:', error);
+        }
+    }
+
+    // Add this new zoom functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainImage = document.getElementById('mainImage');
+        
+        mainImage.addEventListener('click', function() {
+            this.classList.toggle('zoomed');
+        });
+
+        // Add mouse move functionality when zoomed
+        mainImage.addEventListener('mousemove', function(e) {
+            if (this.classList.contains('zoomed')) {
+                const bounds = this.getBoundingClientRect();
+                const x = e.clientX - bounds.left;
+                const y = e.clientY - bounds.top;
+                
+                const xPercent = (x / bounds.width) * 100;
+                const yPercent = (y / bounds.height) * 100;
+                
+                this.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+            }
+        });
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // async function addToCart(productId) {
+        //     try {
+        //         const quantity = document.getElementById('quantity').value;
+        //         const response = await fetch('/add-to-cart', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json'
+        //             },
+        //             body: JSON.stringify({
+        //                 productId,
+        //                 quantity
+        //             })
+        //         });
+                
+        //         const data = await response.json();
+        //         if (data.success) {
+        //             alert('Product added to cart successfully!');
+        //         } else {
+        //             alert(data.message || 'Failed to add product to cart');
+        //         }
+        //     } catch (error) {
+        //         console.error('Error adding to cart:', error);
+        //         alert('Failed to add product to cart');
+        //     }
+        // }
+
+        // async function addToWishlist(productId) {
+        //     try {
+        //         const response = await fetch('/add-to-wishlist', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json'
+        //             },
+        //             body: JSON.stringify({ productId })
+        //         });
+                
+        //         const data = await response.json();
+        //         if (data.success) {
+        //             alert('Product added to wishlist successfully!');
+        //         } else {
+        //             alert(data.message || 'Failed to add product to wishlist');
+        //         }
+        //     } catch (error) {
+        //         console.error('Error adding to wishlist:', error);
+        //         alert('Failed to add product to wishlist');
+        //     }
+        // }
+    </script>
+
+    
+</body>
+</html>
+<%- include('../partials/user/footer') %>

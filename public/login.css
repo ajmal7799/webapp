@@ -1,0 +1,21 @@
+
+
+/* Body Background */
+body {
+    background-color: #2b1c04; /* Light beige background */
+  }
+  
+  /* Google Button Styling */
+  .btn-light:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .btn-light img {
+    margin-right: 10px;
+  }
+  
+  /* Links Styling */
+  .text-warning:hover, .text-primary:hover {
+    text-decoration: underline;
+  }
+  

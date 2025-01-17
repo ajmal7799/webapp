@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        body, html {
+            height: 100%;
+            background-color: #fff4e6;
+            font-family: "Nunito Sans", sans-serif;
+        }
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .otp-timer {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #f2f2f2;
+            border: 2px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 auto;
+        }
+        .btn-primary {
+            background-color: #5a372b;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #4a2b1f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container login-container">
+        <div class="login-form">
+            <h3 class="text-center mb-4">Email Verification</h3>
+            <form id="otpForm" action="/verify-otp" method="post">
+                <div class="mb-3">
+                    <label for="otp" class="form-label">Enter OTP:</label>
+                    <input type="text" id="otp" name="otp" class="form-control" required maxlength="6" pattern="\d*">
+                </div>
+                <div class="text-center mb-3">
+                    <div id="otpTimer" class="otp-timer mb-2">
+                        <span id="timerValue">60</span>
+                    </div>
+                    <small id="timerText">Time remaining</small>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Verify Email</button>
+                <button id="resendButton" type="button" class="btn btn-secondary w-100" style="display: none;">Resend OTP</button>
+            </form>
+            <% if (locals.message && message.length > 0) { %>
+                <div class="alert alert-danger mt-3">
+                    <%= message %>
+                </div>
+            <% } %>
+            <!-- <div class="text-center mt-3">
+                 <small class="text-muted">Already verified? <a href="/login">Login now</a></small> -->
+            <!-- </div>  -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            let timer = 60;
+            let timerInterval;
+
+            function startTimer() {
+                timerInterval = setInterval(() => {
+                    timer--;
+                    $("#timerValue").text(timer);
+                    if (timer <= 0) {
+                        clearInterval(timerInterval);
+                        $("#timerValue").text("0").addClass("text-danger");
+                        $("#timerText").text("OTP Expired");
+                        $("#otp").prop("disabled", true);
+                        $("#resendButton").show();
+                    }
+                }, 1000);
+            }
+
+            startTimer();
+
+            $("#otpForm").on("submit", function(e) {
+                e.preventDefault();
+                const OTPInput = $("#otp").val();
+                $.ajax({
+                    type: "POST",
+                    url: "/verify-otp",
+                    data: { otp: OTPInput },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "OTP Verified Successfully",
+                                text: "Your OTP has been successfully verified!",
+                                confirmButtonText: "OK",
+                            }).then(() => {
+                                window.location.href = response.redirectUrl;
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: response.message || "Invalid OTP. Please try again.",
+                                confirmButtonText: "Retry",
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Invalid OTP",
+                            text: "An error occurred while verifying your OTP. Please try again later!",
+                            confirmButtonText: "Close",
+                        });
+                    },
+                });
+            });
+
+            $("#resendButton").on("click", function() {
+                $("#otp").prop("disabled", false).val("");
+                $("#timerValue").removeClass("text-danger");
+                $("#timerText").text("Time remaining");
+                $(this).hide();
+
+                timer = 60;
+                $("#timerValue").text(timer);
+                startTimer();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/resend-otp",
+                    beforeSend: function() {
+                        $("#resendButton").text("Sending...");
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "OTP Resent Successfully",
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Failed to Resend OTP",
+                                text: "An error occurred while resending OTP. Please try again",
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error:", status, error);
+                        Swal.fire({
+                            icon: "error",
+                            title: "Something went wrong",
+                            text: "Unable to resend OTP. Please try again later.",
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    },
+                    complete: function() {
+                        $("#resendButton").text("Resend OTP");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

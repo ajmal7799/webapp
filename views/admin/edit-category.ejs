@@ -1,0 +1,27 @@
+<%- include("../../views/partials/admin/header") %>
+<div class="container bb">
+    <div class="row justify-content-center content-holder">
+        <div class="col-md-6 mt-60">
+            <form method="post" action="/admin/editCategory/<%=category._id%>">
+                <!-- Name field -->
+                <div class="mb-4">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="categoryName" value="<%=category.name%>" class="form-control border" />
+                </div>
+                
+                <!-- Description field -->
+                <div class="mb-4">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control border"><%=category.description%></textarea>
+                </div>
+
+                <!-- Update button -->
+                <div class="d-grid">
+                    <button class="btn btn-primary" type="submit">Update category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<%- include("../../views/partials/admin/footer") %>
+ 

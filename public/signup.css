@@ -1,0 +1,96 @@
+
+body {
+    background-color: #fff4e6;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  
+  .signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .signup-box {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 350px;
+  }
+  
+  .signup-box h2 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .signup-box input {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .signup-box button {
+    background-color: #5a372b;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .signup-box button:hover {
+    background-color: #402a20;
+  }
+  
+  .signup-box p {
+    color: #6c757d;
+  }
+  
+  .signup-box a {
+    color: #5a372b;
+  }
+  
+  .signup-box a:hover {
+    text-decoration: underline;
+  }
+
+  /* .social-btns {
+    border-radius: 15px;
+    background-color: rgb(240, 240, 240);
+  } */
+
+  .google-signin-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5; /* Light gray background */
+    border: 1px solid #dcdcdc; /* Light gray border */
+    border-radius: 50px; /* Makes the button rounded */
+    padding: 10px 20px; /* Adjusts spacing */
+    text-decoration: none; /* Removes underline from link */
+    font-family: Arial, sans-serif; /* Adds a clean font */
+    font-size: 16px;
+    color: #555; /* Text color */
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+  }
+  
+  .google-signin-btn img {
+    width: 24px; /* Adjust logo size */
+    height: 24px;
+    margin-right: 10px; /* Space between logo and text */
+  }
+  
+  .google-signin-btn:hover {
+    background-color: #e0e0e0; /* Slightly darker background on hover */
+  }
+  
+  
+  
