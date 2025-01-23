@@ -23,43 +23,45 @@
   <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
   <link rel="stylesheet" href="css/style.css" type="text/css">
   <style>
+    .dropdown {
+      position: relative;
+      display: inline-block;
 
-.dropdown {
-  position: relative;
-  display: inline-block;
+    }
 
-}
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: white;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(red, green, blue, alpha);
-  z-index: 1000;
-  right: 0;
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: white;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(red, green, blue, alpha);
+      z-index: 1000;
+      right: 0;
 
-}
-.dropdown-content a {
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-  width: 100%;
-}
-.dropdown-content a:hover{
-  background-color: white;
+    }
 
-}
-.dropdown:hover .dropdown-content{
-  display: block;
-}
+    .dropdown-content a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      width: 100%;
+    }
 
-.header {
-  position: relative;
-  z-index: 500;
+    .dropdown-content a:hover {
+      background-color: white;
 
-}
+    }
 
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .header {
+      position: relative;
+      z-index: 500;
+
+    }
   </style>
 </head>
 
@@ -76,7 +78,9 @@
       <div class="offcanvas__links">
         <% if(locals.user && locals.user.firstname){%>
           <div class="dropdown">
-            <a href="#" class="sign-in-link"><%= locals.user.firstname %></a>
+            <a href="#" class="sign-in-link">
+              <%= locals.user.firstname %>
+            </a>
             <div class="dropdown-content">
               <a href="/userProfile">Profile</a>
               <a href="/logout">Logout</a>
@@ -85,12 +89,12 @@
 
           </div>
 
-        <%}else{%>
-        <!-- <a href="signup">Sign up</a> -->
-        <a href="/login">login</a>
-        <%}%>
+          <%}else{%>
+            <!-- <a href="signup">Sign up</a> -->
+            <a href="/login">login</a>
+            <%}%>
 
-        <a href="#">FAQs</a>
+              <a href="#">FAQs</a>
       </div>
       <div class="offcanvas__top__hover">
         <span>Usd <i class="arrow_carrot-down"></i></span>
@@ -126,28 +130,30 @@
           </div>
           <div class="col-lg-6 col-md-5">
             <div class="header__top__right">
-             <div class="header__top__links">
+              <div class="header__top__links">
 
-              
-               <% if(locals.user && locals.user.firstname){%>
-                <div class="dropdown">
-                  <a href="#" class="sign-in-link"><%= locals.user.firstname %></a>
-                  <div class="dropdown-content">
-                    <a href="/userProfile">Profile</a>
-                    <a href="/logout">Logout</a>
-      
+
+                <% if(locals.user && locals.user.firstname){%>
+                  <div class="dropdown">
+                    <a href="#" class="sign-in-link">
+                      <%= locals.user.firstname %>
+                    </a>
+                    <div class="dropdown-content">
+                      <a href="/userProfile">Profile</a>
+                      <a href="/logout">Logout</a>
+
+                    </div>
+
                   </div>
-      
-                </div>
-      
-              <%}else{%>
-              <!-- <a href="signup">Sign up</a> -->
-              <a href="/login">login</a>
-              <%}%>
+
+                  <%}else{%>
+                    <!-- <a href="signup">Sign up</a> -->
+                    <a href="/login">login</a>
+                    <%}%>
 
 
 
-                <a href="#">FAQs</a>
+                      <a href="#">FAQs</a>
               </div>
               <div class="header__top__hover">
                 <span>Usd <i class="arrow_carrot-down"></i></span>
@@ -166,17 +172,17 @@
       <div class="row">
         <div class="col-lg-3 col-md-3">
           <div class="header__logo">
-            <a href="./index.html"><img src="img/logo.png" alt=""></a>
+            <!-- <a href="./index.html"><img src="img/logo.png" alt=""></a> -->
           </div>
         </div>
         <div class="col-lg-6 col-md-6">
           <nav class="header__menu mobile-menu">
             <ul>
               <li class="active"><a href="./index.html">Home</a></li>
-              <li><a href="shop"> Shop</a></li>
+              <li><a href="/shopPage"> Shop</a></li>
               <!-- <li><a href="./shop.html">Shop</a></li> -->
               <!-- <li><a href="#">Pages</a> -->
-                <!-- <ul class="dropdown">
+              <!-- <ul class="dropdown">
                   <li><a href="./about.html">About Us</a></li>
                   <li><a href="./shop-details.html">Shop Details</a></li>
                   <li><a href="./shopping-cart.html">Shopping Cart</a></li>
@@ -193,7 +199,7 @@
           <div class="header__nav__option">
             <a href="#" class="search-switch"><img src="img/icon/search.png" alt=""></a>
             <a href="#"><img src="img/icon/heart.png" alt=""></a>
-            <a href="#"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
+            <a href="/cartPage"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
             <div class="price">$0.00</div>
           </div>
         </div>

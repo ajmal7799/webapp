@@ -7,12 +7,9 @@ const productController = require("../controllers/admin/productController")
 const {userAuth,adminAuth} = require("../middlewares/auth");
 const path = require('path');
 
-// const upload = require('../middlewares/multerConfig');
-// const Product = require("../models/productSchema");
-// const upload = require('../middlewares/multerConfig'); 
+
 const uploadMiddleware = require('../middlewares/multerConfig');
-// const uploadMiddleware = require('./path-to-multer-config');
-// const upload = require('../middlewares/multerConfig');  // Use a different name
+
 
 
 
@@ -44,7 +41,7 @@ router.get("/unblockCustomer",adminAuth,customerController.customerunBlocked);
 
 
 // Category Management
-router.get("/category",adminAuth,categoryController.categoryInfo);
+router.get("/category",adminAuth,categoryController.categoryInfo);  
 router.post("/addCategory",adminAuth,categoryController.addCategory);
 router.get("/editCategory",adminAuth,categoryController.getEditCategory);
 router.post("/editCategory/:id",adminAuth,categoryController.editCategory)
@@ -53,22 +50,7 @@ router.get("/listCategory",adminAuth,categoryController.getListCategory);
 router.get("/unlistCategory",adminAuth,categoryController.getUnlistCategory)
 
 
-// Product management
-// router.get("/addProducts",adminAuth,productController.getProductAddPage)
-// router.post("/addProducts",adminAuth,upload.array("images"),productController.addProducts)
-// const uploadMiddleware = require('./path-to-multer-config');
-
-// In your route
-// router.post('/addProducts', uploadMiddleware('images'), productController.addProducts); 
-
-// router.post("/products", adminAuth, uploadMiddleware.array("images"), productController.addProducts);
-
-// router.post('/addProducts', uploadMiddleware.array('images', 5), addProducts);
-
-// const multer = require('multer');
-// const storage = multer.memoryStorage();
-// const upload = multer({ storage: storage });
-
+      
 router.get('/addProducts', adminAuth, productController.getAddProductAppPage);
 
 

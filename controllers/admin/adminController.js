@@ -11,7 +11,7 @@ const loadLogin = async (req, res) => {
     if (req.session.admin) {
         return res.redirect('/admin/dashboard');
     } else {
-        // console.log('Rendering admin login page');
+        
         res.render("admin-login", { message: null });
     }
 }
@@ -42,7 +42,7 @@ const login = async (req, res) => {
 }
 
 
-const loadDashboard = async (req, res) => {
+const loadDashboard = async (req, res) => { 
     try {
         if (req.session.admin){
             res.render("dashboard");
@@ -82,3 +82,4 @@ module.exports = {
     pageerror,
     logout,
 }
+

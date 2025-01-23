@@ -2,6 +2,12 @@ const Category = require("../../models/categorySchema");
 const categoryInfo = async (req, res) => {
     try {
 
+        let search = "";
+        if(req.query.search){
+           search=req.query.search;
+        }
+
+
         const page = parseInt(req.query.page) || 1;
         const limit = 4
         const skip = (page - 1) * limit;
@@ -31,7 +37,7 @@ const categoryInfo = async (req, res) => {
 const addCategory = async (req, res) => {
     const { name, description } = req.body;
     try {
-        const existingCategory = await Category.findOne({ name });
+        const existingCategory = await Category.findOne({ name }); 
 
         if (existingCategory) {
 
@@ -60,7 +66,7 @@ const getEditCategory = async (req, res) => {
         res.render("edit-category", { category: category })
 
     } catch (error) {
-        res.redirect("/pageerror")
+        res.redirect("/pageerror");
 
     }
 }
@@ -70,7 +76,7 @@ const editCategory = async (req, res) => {
     try {
         const id = req.params.id;
         
-        const { categoryName, description } = req.body
+        const { categoryName, description } = req.body  
 
         const existingCategory = await Category.findOne({ name: categoryName })
 

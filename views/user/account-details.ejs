@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Details</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: #1f2937;
+        }
+
+        .edit-button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .edit-button:hover {
+            background: #4338ca;
+        }
+
+        .details-group {
+            margin-bottom: 25px;
+        }
+
+        .details-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .details-value {
+            font-size: 1rem;
+            color: #1f2937;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Edit Form Styles */
+        .edit-form {
+            display: none;
+        }
+
+        .edit-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .save-button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .cancel-button {
+            background: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .save-button:hover {
+            background: #4338ca;
+        }
+
+        .cancel-button:hover {
+            background: #e5e7eb;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+     
+        <div class="card">
+            <!-- View Mode -->
+            <div class="view-mode">
+                <div class="mb-3">
+                    <a href="/userProfile" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+                <div class="page-header">
+                    
+                    <h1 class="page-title">Personal Information</h1>
+                    <button class="edit-button" onclick="toggleEdit()">
+                        <i class="fas fa-pen"></i>
+                        Edit Details
+                    </button>
+                </div>
+
+                <div class="details-group">
+                    
+                    <div class="details-label">Full Name</div>
+                    <div class="details-value">
+                        <%= user.firstname%>
+                            <%=user.lastname%>
+                    </div>
+                </div>
+
+                <div class="details-group">
+                    <div class="details-label">Email Address</div>
+                    <div class="details-value">
+                        <%= user.email %>
+                    </div>
+                </div>
+
+                <div class="details-group">
+                    <div class="details-label">Phone Number</div>
+                    <div class="details-value">
+                        <%= user.phone %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Mode -->
+            <form action="/update-profile" method="POST" class="edit-form" id="myForm">
+                <div class="page-header">
+                    <h1 class="page-title">Edit Personal Information</h1>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="fullName">First Name</label>
+                    <input type="text" id="first-name" name="fullName" class="form-input" value="<%= user.firstname %>"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="fullName">Last Name</label>
+                    <input type="text" id="last-name" name="lastname" class="form-input" value="<%=user.lastname%>"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" value="<%= user.email %>" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-input" value="<%= user.phone %>" required>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="submit" class="save-button">Save Changes</button>
+                    <button type="button" class="cancel-button" onclick="toggleEdit()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleEdit() {
+            const viewMode = document.querySelector('.view-mode');
+            const editForm = document.querySelector('.edit-form');
+
+            viewMode.style.display = viewMode.style.display === 'none' ? 'block' : 'none';
+            editForm.style.display = editForm.style.display === 'block' ? 'none' : 'block';
+        }
+
+
+
+        const form = document.getElementById("myForm");
+
+form.addEventListener("submit", (e) => {
+  // Prevent form submission
+  e.preventDefault();
+
+  // Clear previous error messages
+  document.querySelectorAll(".error").forEach((error) => {
+    error.textContent = "";
+  });
+
+  // Get input values
+  const fname = document.getElementById("first-name").value.trim();
+  const lname = document.getElementById("last-name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+
+  let isValid = true;
+
+  // First Name Validation
+  if (fname === "") {
+    isValid = false;
+    document.getElementById("first-name-error").textContent = "First name is required.";
+  } else if (!/^[a-zA-Z]+$/.test(fname)) {
+    isValid = false;
+    document.getElementById("first-name-error").textContent = "First name must contain only letters.";
+  }
+
+  // Last Name Validation
+  if (lname === "") {
+    isValid = false;
+    document.getElementById("last-name-error").textContent = "Last name is required.";
+  } else if (!/^[a-zA-Z]+$/.test(lname)) {
+    isValid = false;
+    document.getElementById("last-name-error").textContent = "Last name must contain only letters.";
+  }
+
+  // Email Validation
+  if (email === "") {
+    isValid = false;
+    document.getElementById("email-error").textContent = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    isValid = false;
+    document.getElementById("email-error").textContent = "Enter a valid email address.";
+  }
+
+  // Phone Validation
+  if (phone === "") {
+    isValid = false;
+    document.getElementById("phone-error").textContent = "Phone number is required.";
+  } else if (!/^\d{10}$/.test(phone)) {
+    isValid = false;
+    document.getElementById("phone-error").textContent = "Phone number must be 10 digits.";
+  }
+
+  // If all validations pass, submit the form
+  if (isValid) {
+    alert("Form submitted successfully!");
+    form.submit();
+  }
+});
+
+   
+
+
+
+
+    </script>
+</body>
+
+</html>

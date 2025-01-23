@@ -1,0 +1,297 @@
+<%- include('../partials/user/header') %>
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">Shopping Cart</h2>
+            </div>
+        </div>
+        <% if (cart && cart.books && cart.books.length > 0) { %>
+            <div class="row">
+                <div class="col-lg-8">
+                    <% let subtotal = 0; %>
+                    <% cart.books.forEach(bookItem => { %>
+                        <% subtotal += bookItem.product.salePrice * bookItem.availableQuantity; %>
+                        <div class="card mb-3 cart-item" id="cart-item-<%= bookItem.product._id %>"
+                            data-price="<%= bookItem.product.salePrice %>"
+                            data-quantity="<%= bookItem.availableQuantity %>">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <!-- Book Image -->
+                                    <div class="col-md-2">
+                                        <img src="<%= bookItem.product.productImages[0] %>"
+                                            alt="<%= bookItem.product.name %>" class="img-fluid rounded">
+                                    </div>
+
+                                    <!-- Book Details -->
+                                    <div class="col-md-4">
+                                        <h5 class="card-title mb-1">
+                                            <%= bookItem.product.name %>
+                                        </h5>
+                                        <p class="text-muted small mb-1">
+                                            Writer: <%= bookItem.product.writer || 'Not specified' %>
+                                        </p>
+                                        <p class="text-muted small mb-1">
+                                            Language: <%= bookItem.product.language %>
+                                        </p>
+                                        <p class="text-muted small mb-1">
+                                            Published: <%= bookItem.product.publishedDate ? new
+                                                Date(bookItem.product.publishedDate).toLocaleDateString()
+                                                : 'Not specified' %>
+                                        </p>
+                                        <p class="text-muted small mb-0">
+                                            Status: <span
+                                                class="badge bg-<%= bookItem.product.status === 'Available' ? 'success' : 'warning' %>">
+                                                <%= bookItem.product.status %>
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <!-- Quantity Controls -->
+                                    <div class="col-md-3">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <button class="btn btn-outline-secondary btn-sm"
+                                                onclick="updateQuantity('<%= bookItem.product._id %>', 'decrease')"
+                                                <%= bookItem.availableQuantity <= 1 ? 'disabled' : '' %>>
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+
+                                            <span class="mx-3" id="quantity-<%= bookItem.product._id %>">
+                                                <%= bookItem.availableQuantity %>
+                                            </span>
+
+                                            <button class="btn btn-outline-secondary btn-sm"
+                                                onclick="updateQuantity('<%= bookItem.product._id %>', 'increase')"
+                                                <%= bookItem.availableQuantity >= 5 ? 'disabled' : '' %>>
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-danger" id="quantity-msg-<%= bookItem.product._id %>"></small>
+                                    </div>
+
+                                    <!-- Price -->
+                                    <div class="col-md-2 text-center">
+                                        <% if (bookItem.product.salePrice < bookItem.product.regularPrice) { %>
+                                            <p class="mb-0 text-success">₹<%= bookItem.product.salePrice %></p>
+                                            <small class="text-muted text-decoration-line-through">₹<%= bookItem.product.regularPrice %></small>
+                                        <% } else { %>
+                                            <p class="mb-0">₹<%= bookItem.product.regularPrice %></p>
+                                        <% } %>
+                                        <small class="text-muted">
+                                            Total: ₹<%= bookItem.product.salePrice * bookItem.availableQuantity %>
+                                        </small>
+                                    </div>
+
+                                    <!-- Remove Button -->
+                                    <div class="col-md-1">
+                                        <button class="btn btn-outline-danger btn-sm"
+                                            onclick="removeFromCart('<%= bookItem.product._id %>')"
+                                            <%= bookItem.product.isBlocked ? 'disabled' : '' %>>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+                <!-- Order Summary -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Order Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal</span>
+                                <span id="cart-subtotal">₹<%= subtotal %></span>
+                            </div>
+
+                            <% const shipping = 40; %>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping</span>
+                                <span>₹<%= shipping %></span>
+                            </div>
+
+                            <div class="d-flex justify-content-between border-top pt-3 mt-2">
+                                <strong>Total</strong>
+                                <strong id="cart-total">₹<%= subtotal + shipping %></strong>
+                            </div>
+
+                            <button onclick="proceedToCheckout()" class="btn btn-primary w-100 mt-3">
+                                Proceed to Checkout
+                            </button>
+
+                            <a href="/products" class="btn btn-outline-secondary w-100 mt-2">
+                                Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <!-- Empty Cart -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-shopping-cart fa-4x text-muted"></i>
+                </div>
+                <h3>Your cart is empty</h3>
+                <p class="text-muted">Browse our books collection and discover amazing titles!</p>
+                <a href="/shopPage" class="btn btn-primary mt-3">
+                    Explore Books
+                </a>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+    <script>
+        function updateQuantity(productId, action) {
+            fetch('/api/cart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId,
+                    action
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const quantityElement = document.getElementById(`quantity-${productId}`);
+                        const quantityMsgElement = document.getElementById(`quantity-msg-${productId}`);
+                        const increaseButton = document.querySelector(`#cart-item-${productId} .fa-plus`).parentElement;
+                        const decreaseButton = document.querySelector(`#cart-item-${productId} .fa-minus`).parentElement;
+
+                        if (quantityElement) {
+                            quantityElement.textContent = data.availableQuantity;
+                        }
+
+                        if (quantityMsgElement) {
+                            if (data.availableQuantity >= 5) {
+                                quantityMsgElement.textContent = 'Maximum quantity reached';
+                                increaseButton.disabled = true;
+                            } else {
+                                quantityMsgElement.textContent = '';
+                                increaseButton.disabled = false;
+                            }
+
+                            if (data.availableQuantity <= 1) {
+                                decreaseButton.disabled = true;
+                            } else {
+                                decreaseButton.disabled = false;
+                            }
+                        }
+
+                        const cartItem = document.getElementById(`cart-item-${productId}`);
+                        if (cartItem) {
+                            cartItem.dataset.quantity = data.availableQuantity;
+                        }
+
+                        updateCartTotals();
+
+                        // Swal.fire({
+                        //     toast: true,
+                        //     position: 'top-end',
+                        //     icon: 'success',
+                        //     title: 'Cart updated',
+                        //     showConfirmButton: false,
+                        //     timer: 1500
+                        // });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: data.message || 'Could not update quantity'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to update quantity'
+                    });
+                });
+        }
+
+        function removeFromCart(productId) {
+            Swal.fire({
+                title: 'Remove Book',
+                text: 'Are you sure you want to remove this book from cart?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, remove it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/remove', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ productId })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const cartItem = document.getElementById(`cart-item-${productId}`);
+                                if (cartItem) {
+                                    cartItem.remove();
+                                    updateCartTotals();
+
+                                    // Check if cart is empty
+                                    const remainingItems = document.querySelectorAll('.cart-item');
+                                    if (remainingItems.length === 0) {
+                                        location.reload();
+                                    }
+                                }
+
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: 'Book removed from cart',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to remove book'
+                            });
+                        });
+                }
+            });
+        }
+
+        function updateCartTotals() {
+            let subtotal = 0;
+            const items = document.querySelectorAll('.cart-item');
+
+            items.forEach(item => {
+                const price = parseFloat(item.dataset.price);
+                const quantity = parseInt(item.dataset.quantity);
+                subtotal += price * quantity;
+            });
+
+            const shipping = 40;
+            const total = subtotal + shipping;
+
+            document.getElementById('cart-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('cart-total').textContent = `₹${total.toFixed(2)}`;
+        }
+
+        function proceedToCheckout() {
+            window.location.href = '/checkout';
+        }
+    </script>
+<%- include('../partials/user/footer') %>

@@ -85,10 +85,13 @@
                         <button class="btn btn-primary" type="submit" id="searchButton"
                             style="border-radius: 0 25px 25px 0; padding: 10px 25px; background-color: #0d6efd; ">
                             Search
+
                         </button>
+
                     </div>
                 </form>
             </header>
+            <br>
             <div class="card">
                 <div class="card-body">
                     <div class="row">
@@ -143,8 +146,8 @@
 
                                                 <td class="text-start">
                                                     <%if(category.isListed){%>
-                                                        <span class="badge rounded-pill alert-success" 
-                                                        style="width: 60px; color: #000000">Listed</span>
+                                                        <span class="badge rounded-pill alert-success"
+                                                            style="width: 60px; color: #000000">Listed</span>
 
                                                         <%}else{%>
 
@@ -363,6 +366,26 @@
                     element.style.display = "none";
                 });
             }
+
+
+            document.getElementById("product_name").addEventListener("input",function(){
+                const nameInput = this.value;
+                const nameError = document.getElementById("name-error");
+
+                const caseSensitivePattern = /^[A-Z][a-z]*$/;;
+
+                if(caseSensitivePattern.test(nameInput)){
+                    nameError.textContent = "";
+                    this.style.borderColor = "";
+                }else{
+                    nameError.textContent = "Name must start with an uppercase letter"
+                    this.style.borderColor = "red";
+
+                }
+
+
+
+            })
 
 
         </script>

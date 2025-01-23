@@ -1,0 +1,264 @@
+<%- include('../partials/user/header') %>
+
+
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Shop Page</title>
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <style>
+            .product-cart-wrap {
+                border: 1px solid #eee;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                transition: all 0.3s ease;
+                height: 100%;
+            }
+
+            .product-cart-wrap:hover {
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                transform: translateY(-3px);
+            }
+
+            .product-img-action-wrap {
+                position: relative;
+                padding: 10px;
+                background: #fff;
+                border-radius: 8px 8px 0 0;
+            }
+
+            .product-img {
+                position: relative;
+                overflow: hidden;
+                border-radius: 4px;
+            }
+
+            .product-img img {
+                width: 100%;
+                height: 250px;
+                object-fit: cover;
+                transition: all 0.3s ease;
+            }
+
+            .product-img:hover img {
+                transform: scale(1.05);
+            }
+
+            .wishlist-btn {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border-radius: 50%;
+                width: 35px;
+                height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+            }
+
+            .wishlist-btn i {
+                color: #ff6b6b;
+                font-size: 16px;
+            }
+
+            .wishlist-btn:hover {
+                transform: scale(1.1);
+                background: #ff6b6b;
+            }
+
+            .wishlist-btn:hover i {
+                color: white;
+            }
+
+            .product-content-wrap {
+                padding: 15px;
+                background: white;
+                border-radius: 0 0 8px 8px;
+            }
+
+            .product-content-wrap h6 {
+                font-size: 16px;
+                margin-bottom: 10px;
+                color: #253D4E;
+                font-weight: 600;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                /* -webkit-line-clamp: 2; */
+                -webkit-box-orient: vertical;
+            }
+
+            .product-content-wrap h5 {
+                font-size: 18px;
+                color: #3BB77E;
+                font-weight: 700;
+                margin-bottom: 15px;
+            }
+
+            .product-content-wrap a {
+                display: inline-block;
+                padding: 8px 20px;
+                background: #3BB77E;
+                color: white;
+                border-radius: 4px;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                width: 100%;
+                text-align: center;
+            }
+
+            .product-content-wrap a:hover {
+                background: #2a8e5f;
+            }
+
+            .shop-header {
+                text-align: center;
+                padding: 30px 0;
+                margin-bottom: 20px;
+            }
+
+            .shop-header h1 {
+                color: #253D4E;
+                font-size: 32px;
+                font-weight: 700;
+            }
+
+            .no-products {
+                text-align: center;
+                padding: 50px;
+                color: #666;
+            }
+
+            .debug-info {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 4px;
+                margin-top: 20px;
+                font-family: monospace;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <header class="shop-header">
+                <h1>Our Products</h1>
+            </header>
+
+            <main>
+                <div class="row product__filter">
+                    <% if(products && products.length> 0) { %>
+                        <% for(let i=0; i < products.length; i++) { %>
+                            <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+                                <div class="product-cart-wrap mb-30">
+                                    <div class="product-img-action-wrap">
+                                        <div class="product-img product-img-zoom">
+                                            <a href="/productDetails?id=<%=products[i]._id%>">
+                                                <img class="default-img" src="<%=products[i].productImages[0]%>"
+                                                    alt="<%=products[i].name%>">
+                                            </a>
+                                        </div>
+                                        <a href="/addToWishlist?id=<%=products[i]._id%>" class="wishlist-btn">
+                                            <i class="fas fa-heart"></i>
+                                        </a>
+                                    </div>
+
+                                    <div class="product-content-wrap">
+                                        <h6>
+                                            <%=products[i].name%>
+                                        </h6>
+                                        <h5>
+                                            <%=products[i].regularPrice%>
+                                        </h5>
+                                        <button onclick="addToCart('<%=products[i]._id%>')">Add to cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                                <% } else { %>
+                                    <p>No products available</p>
+                                    <p>Debug: Products array is <%= products ? 'defined' : 'undefined' %> with length
+                                            <%= products ? products.length : 0 %>
+                                    </p>
+                                    <% } %>
+            </main>
+        </div>
+        </div>
+
+        <!-- Bootstrap Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+
+    </html>
+
+    <script>
+      function addToCart(productId) {
+    fetch('/addToCart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: productId })
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Failed to add to cart');
+        }
+    })
+    .then(data => {
+        console.log('Product added to cart:', data);
+        // Success message with two options
+        Swal.fire({
+            title: 'Added to Cart!',
+            text: 'Would you like to view your cart?',
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#7066e0',
+            confirmButtonText: 'Go to Cart',
+            cancelButtonText: 'Continue Shopping'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/cart';
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        // Error message
+        Swal.fire({
+            title: 'Oops!',
+            text: 'Could not add the product to the cart.',
+            icon: 'error',
+            confirmButtonColor: '#3085d6'
+        });
+    });
+}
+    </script>
+    </body>
+
+    </html>
+
+
+
+
+
+
+
+
+
+
+
+
+    <%- include('../partials/user/footer') %>
