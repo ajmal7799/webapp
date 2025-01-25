@@ -112,15 +112,20 @@
 
                 <div class="col-md-6">
                     <div class="product-gallery">
-                        <img id="mainImage" src="<%= product.productImages[0] %>" alt="<%= product.name %>"
-                            class="main-image">
-                        <div class="thumbnail-container">
-                            <% product.productImages.forEach((image, index)=> { %>
-                                <img src="<%= image %>" alt="Product thumbnail <%= index + 1 %>"
-                                    class="thumbnail <%= index === 0 ? 'active' : '' %>"
-                                    onclick="changeImage(this.src, this)">
-                                <% }); %>
-                        </div>
+                        <% if (product.productImages && product.productImages.length > 0) { %>
+                            <img id="mainImage" src="<%= product.productImages[0] %>" alt="<%= product.name %>"
+                                class="main-image">
+                            <div class="thumbnail-container">
+                                <% product.productImages.forEach((image, index)=> { %>
+                                    <img src="<%= image %>" alt="Product thumbnail <%= index + 1 %>"
+                                        class="thumbnail <%= index === 0 ? 'active' : '' %>"
+                                        onclick="changeImage(this.src, this)">
+                                    <% }); %>
+                            </div>
+                            <% } else { %>
+                                <img id="mainImage" src="/path/to/default/image.jpg" alt="Default Image"
+                                    class="main-image">
+                                <% } %>
                     </div>
                 </div>
 

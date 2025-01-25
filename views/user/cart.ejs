@@ -18,7 +18,7 @@
                                 <div class="row align-items-center">
                                     <!-- Book Image -->
                                     <div class="col-md-2">
-                                        <img src="<%= bookItem.product.productImages[0] %>"
+                                        <img src="<%= bookItem.product.productImages && bookItem.product.productImages.length > 0 ? bookItem.product.productImages[0] : '/path/to/default/image.jpg' %>"
                                             alt="<%= bookItem.product.name %>" class="img-fluid rounded">
                                     </div>
 
@@ -121,7 +121,7 @@
                                 Proceed to Checkout
                             </button>
 
-                            <a href="/products" class="btn btn-outline-secondary w-100 mt-2">
+                            <a href="/shop" class="btn btn-outline-secondary w-100 mt-2">
                                 Continue Shopping
                             </a>
                         </div>

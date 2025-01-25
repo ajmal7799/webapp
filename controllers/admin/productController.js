@@ -77,7 +77,7 @@ const addProduct = async (req, res) => {
             return res.redirect("/admin/add-product");
         }
 
-       
+
         const product = new Product({
             name: productName,
             writer,
@@ -118,6 +118,7 @@ const getAllProducts = async (req, res) => {
                 { name: { $regex: new RegExp(".*" + search + ".*", "i") } }
             ]
         })
+            // .sort({ _id: -1 })
             .limit(limit)
             .skip((page - 1) * limit)
             .populate({
@@ -263,7 +264,7 @@ const updateProduct = async (req, res) => {
                     }
                 }
 
-    
+
                 const imagePath = `/uploads/products/${Date.now()}-${i}-original.jpg`;
 
                 await sharp(uploadedFile.buffer)
@@ -275,7 +276,7 @@ const updateProduct = async (req, res) => {
             }
         }
 
-        
+
         await Product.findByIdAndUpdate(productId, {
             name: productName,
             writer,
@@ -292,7 +293,7 @@ const updateProduct = async (req, res) => {
 
         req.flash('success', 'Product updated successfully');
         res.redirect('/admin/products');
-        
+
 
     } catch (error) {
         console.error('Error updating product:', error);

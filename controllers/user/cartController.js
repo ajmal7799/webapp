@@ -1,11 +1,15 @@
 const Product = require("../../models/productSchema");
 const Cart = require("../../models/cartSchema");
 const mongoose = require('mongoose');
+const Address = require("../../models/addressSchema");
+const User = require("../../models/userSchema");
 
 const getCartPage = async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.user._id }).populate("books.product");
-        res.render("cart", { cart });
+        const userData = await User.findOne({ _id: req.session.user._id });
+        // console.log(userData,"hello")
+        res.render("cart", { cart,user:userData });
     } catch (error) {
         console.error(error);
         res.status(500).send("error fetching cart");
@@ -175,11 +179,86 @@ const updateCartQuantity = async (req, res) => {
     }
 };
 
+
+// checkout page
+
+const getCheckoutPage = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const cart = await Cart.findOne({ userId }).populate({ path: 'books.product', model: 'Product' });
+        const addresses = await Address.find({ user_id: userId });
+
+        const userData = await User.findOne({_id:req.session.user._id});
+
+
+        res.render('checkout', {
+            cart,
+            addresses,
+            title: 'Checkout',
+            user:userData,
+        });
+    } catch (error) {
+        console.error('Checkout page error:', error);
+        req.flash('error', 'Error loading checkout page');
+        res.redirect('/cart');
+    }
+}
+
+
+const addAddress = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { _id, city, state, pin_code, landmark, alternative_no, addresstype } = req.body;
+
+        if (_id) {
+            // console.log("id",_id)
+            await Address.findByIdAndUpdate(_id, {
+                city, state, pin_code, landmark,
+                alternative_no, addresstype
+            })
+            req.flash('success', 'Address updated successfully');
+        } else {
+            const newAddress = new Address({
+                user_id: userId,
+                city, state, pin_code,
+                landmark, alternative_no, addresstype
+            });
+            await newAddress.save();
+            req.flash('success', 'Address added successfully');
+        }
+        res.redirect('/checkout');
+
+    } catch (error) {
+        console.error('Add address error:', error);
+        req.flash('error', 'Failed to save address');
+        res.redirect('/checkout');
+    }
+}
+
+const deleteAddress = async(req,res)=>{
+    try {
+
+        await Address.findByIdAndDelete(req.params.id);
+        req.flash('success', 'Address deleted successfully');
+        res.redirect('/checkout');
+        
+    } catch (error) {
+        console.error('Delete address error:', error);
+        req.flash('error', 'Failed to delete address');
+        res.redirect('/checkout');
+        
+    }
+}
+
+
 module.exports = {
     getCartPage,
     addToCart,
     removeFromCart,
     updateCartQuantity,
+    getCheckoutPage,
+    addAddress,
+    deleteAddress
 };
 
 

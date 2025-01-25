@@ -1,0 +1,288 @@
+<%- include('../partials/user/header') %>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Cart Items Section -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Your Cart</h4>
+                    </div>
+                    <div class="card-body">
+                        <% if (cart && cart.books && cart.books.length> 0) { %>
+                            <% let subtotal=0 %>
+                                <% cart.books.forEach((item)=> { %>
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                                        <div class="d-flex align-items-center">
+                                            <% if (item.product.productImages && item.product.productImages.length> 0) {
+                                                %>
+                                                <img src="<%= item.product.productImages[0] %>"
+                                                    alt="<%= item.product.title %>" class="img-thumbnail mr-3"
+                                                    style="width: 100px; height: 100px; object-fit: cover;">
+                                                <% } else { %>
+                                                    <img src="/path/to/default/image.jpg" alt="Default Image"
+                                                        class="img-thumbnail mr-3"
+                                                        style="width: 100px; height: 100px; object-fit: cover;">
+                                                    <% } %>
+                                                        <div>
+                                                            <h6>
+                                                                <%= item.product.name %>
+                                                            </h6>
+                                                            <p class="text-muted mb-0">
+                                                                ₹<%= item.product.regularPrice ?
+                                                                    item.product.regularPrice.toFixed(2) : 'N/A' %>
+                                                                    x <%= item.availableQuantity %>
+                                                            </p>
+                                                        </div>
+                                        </div>
+                                        <div>
+                                            <% let itemTotal=item.product.regularPrice ? item.product.regularPrice *
+                                                item.availableQuantity : 0 %>
+                                                ₹<%= itemTotal.toFixed(2) %>
+                                                    <% subtotal +=itemTotal %>
+                                        </div>
+                                    </div>
+                                    <% }); %>
+
+                                        <div class="mt-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Subtotal</span>
+                                                <span>₹<%= subtotal.toFixed(2) %></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span>Shipping</span>
+                                                <span>₹40.00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between font-weight-bold mt-2">
+                                                <h5>Total</h5>
+                                                <h5>₹<%= (subtotal + 40).toFixed(2) %>
+                                                </h5>
+                                            </div>
+                                        </div>
+                                        <% } else { %>
+                                            <p class="text-center">Your cart is empty</p>
+                                            <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Management Section -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>Delivery Address</h4>
+                        <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addressModal">
+                            + Add New
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <% if (addresses && addresses.length> 0) { %>
+                            <form id="selectAddressForm" action="/checkout" method="POST">
+                                <% addresses.forEach((address, index)=> { %>
+                                    <div class="address-item border rounded p-3 mb-3">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <h6 class="mb-0">
+                                                <%= address.addresstype %> Address
+                                            </h6>
+                                            <div>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary mr-2 edit-address"
+                                                    data-id="<%= address._id %>" data-city="<%= address.city %>"
+                                                    data-state="<%= address.state %>"
+                                                    data-pincode="<%= address.pin_code %>"
+                                                    data-landmark="<%= address.landmark %>"
+                                                    data-alternative="<%= address.alternative_no %>"
+                                                    data-type="<%= address.addresstype %>">
+                                                    Edit
+                                                </button>
+                                                <a href="/delete-address/<%= address._id %>"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this address?');">
+                                                    Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <p class="mb-1">
+                                            <%= address.city %>, <%= address.state %> - <%= address.pin_code %>
+                                        </p>
+                                        <small>Landmark: <%= address.landmark %></small>
+                                        <% if (address.alternative_no) { %>
+                                            <p class="mt-1 mb-0">
+                                                <small>Alt. Phone: <%= address.alternative_no %></small>
+                                            </p>
+                                            <% } %>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="radio" name="selectedAddress"
+                                                        id="address<%= index %>" value="<%= address._id %>" <%=index===0
+                                                        ? 'checked' : '' %>
+                                                    >
+                                                    <label class="form-check-label" for="address<%= index %>">
+                                                        Select this address
+                                                    </label>
+                                                </div>
+                                    </div>
+                                    <% }); %>
+                            </form>
+                            <% } else { %>
+                                <p class="text-center text-muted">No saved addresses</p>
+                                <% } %>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h4>Apply Coupon</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="couponForm" class="d-flex">
+                            <input type="text" class="form-control mr-2" id="couponCode"
+                                placeholder="Enter coupon code">
+                            <button type="button" class="btn btn-primary" onclick="applyCoupon()">Apply</button>
+                        </form>
+                        <div id="couponResult" class="mt-2"></div>
+                    </div>
+
+                    <div class="card-header">
+                        <h4>Payment Options</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="paymentForm">
+                            <div class="payment-options">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="paymentMethod"
+                                        id="cashOnDelivery" value="cod" required>
+                                    <label class="form-check-label" for="cashOnDelivery">
+                                        Cash on Delivery
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="onlinePayment"
+                                        value="online" required>
+                                    <label class="form-check-label" for="onlinePayment">
+                                        Online Payment
+                                    </label>
+                                    <div id="onlinePaymentOptions" class="ml-4 mt-2" style="display:none;">
+                                        <select class="form-control" id="onlinePaymentMethod">
+                                            <option value="">Select Payment Method</option>
+                                            <option value="credit_card">Credit Card</option>
+                                            <option value="debit_card">Debit Card</option>
+                                            <option value="net_banking">Net Banking</option>
+                                            <option value="upi">UPI</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="walletPayment"
+                                        value="wallet" required>
+                                    <label class="form-check-label" for="walletPayment">
+                                        Wallet Payment
+                                    </label>
+                                    <div id="walletBalance" class="ml-4 mt-2" style="display:none;">
+                                        <p>Available Balance: ₹500.00</p>
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="useFullWallet">
+                                            <label class="custom-control-label" for="useFullWallet">
+                                                Use Full Wallet Balance
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+
+                <div class="mt-3">
+                    <button class="btn btn-success btn-block" <%=(cart && cart.books && cart.books.length> 0) ? '' :
+                        'disabled' %>
+                        onclick="document.getElementById('selectAddressForm').submit();"
+                        >
+                        Place Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <br>
+
+    <div class="modal fade" id="addressModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Address</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <form action="/add-address" method="POST" id="addressForm">
+                    <input type="hidden" name="_id" id="addressId">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" class="form-control" name="city" id="cityInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" class="form-control" name="state" id="stateInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Pin Code</label>
+                            <input type="text" class="form-control" name="pin_code" id="pincodeInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Landmark</label>
+                            <input type="text" class="form-control" name="landmark" id="landmarkInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Alternative Phone Number</label>
+                            <input type="text" class="form-control" name="alternative_no" id="alternateInput">
+                        </div>
+                        <div class="form-group">
+                            <label>Address Type</label>
+                            <select class="form-control" name="addresstype" id="addressTypeInput" required>
+                                <option value="home">Home</option>
+                                <option value="office">Office</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Address</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editButtons = document.querySelectorAll('.edit-address');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    const city = this.getAttribute('data-city');
+                    const state = this.getAttribute('data-state');
+                    const pincode = this.getAttribute('data-pincode');
+                    const landmark = this.getAttribute('data-landmark');
+                    const alternative = this.getAttribute('data-alternative');
+                    const type = this.getAttribute('data-type');
+
+                    document.getElementById('addressId').value = id;
+                    document.getElementById('cityInput').value = city;
+                    document.getElementById('stateInput').value = state;
+                    document.getElementById('pincodeInput').value = pincode;
+                    document.getElementById('landmarkInput').value = landmark;
+                    document.getElementById('alternateInput').value = alternative;
+                    document.getElementById('addressTypeInput').value = type;
+
+                    $('#addressModal').modal('show');
+                });
+            });
+        });
+    </script>
+
+    <%- include('../partials/user/footer') %>

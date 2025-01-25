@@ -145,6 +145,103 @@
                 margin-top: 20px;
                 font-family: monospace;
             }
+
+            .search-form .form-control {
+                height: 30px;
+                font-size: 14px;
+                padding: 5px;
+                border-radius: 25px;
+            }
+
+            .search-form .btn {
+                height: 30px;
+                font-size: 14px;
+                padding: 0 10px;
+            }
+
+            .search-form .input-group {
+                max-width: 300px;
+                margin: 0 auto;
+
+            }
+
+            .shop-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                margin-right: 120px;
+            }
+
+            .header-title {
+                margin: 0;
+                text-align: right;
+
+            }
+
+            .search-form {
+                display: flex;
+                justify-content: center;
+                margin: 0 auto;
+                max-width: 300px;
+            }
+
+            .shop-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 20px;
+            }
+
+            .header-title {
+                margin: 0;
+                font-size: 24px;
+                color: #333;
+                flex-grow: 1;
+            }
+
+            .form-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 20px;
+                /* Space between search form and dropdown */
+                width: 100%;
+                /* Adjusts layout within the header */
+            }
+
+            .search-form {
+                flex-grow: 2;
+                max-width: 400px;
+                /* Centered size */
+                margin: 0 auto;
+            }
+
+            .search-form .form-control {
+                height: 35px;
+                font-size: 14px;
+                padding: 5px 10px;
+                border-radius: 25px;
+            }
+
+            .search-form .btn {
+                height: 35px;
+                font-size: 14px;
+                padding: 0 15px;
+            }
+
+            .sort-dropdown {
+                flex-grow: 1;
+                max-width: 150px;
+                text-align: right;
+            }
+
+            .sort-dropdown .form-control {
+                border-radius: 8px;
+                padding: 5px 10px;
+                font-size: 14px;
+
+            }
         </style>
     </head>
 
@@ -152,99 +249,176 @@
         <div class="container">
             <header class="shop-header">
                 <h1>Our Products</h1>
+
+                <!-- Search and Sort Form -->
+                <form action="/shop" method="GET" class="search-form mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" placeholder="Search products..."
+                                    value="<%= searchQuery || '' %>">
+                                <button class="btn btn-primary" type="submit">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 sort-dropdown">
+                            <div class="input-group">
+                                <select name="sort" class="form-control" onchange="this.form.submit()">
+                                    <option value="select">Select one</option>
+                                    <option value="newest" <%=sort==='newest' ? 'selected' : '' %>>
+                                        New Arrivals
+                                    </option>
+                                    <option value="price-low" <%=sort==='price-low' ? 'selected' : '' %>>
+                                        Price Low to High
+                                    </option>
+                                    <option value="price-high" <%=sort==='price-high' ? 'selected' : '' %>>
+                                        Price High to Low
+                                    </option>
+                                    <option value="name-asc" <%=sort==='name-asc' ? 'selected' : '' %>>
+                                        Name A to Z
+                                    </option>
+                                    <option value="name-desc" <%=sort==='name-desc' ? 'selected' : '' %>>
+                                        Name Z to A
+                                    </option>
+                                    <option value="featured" <%=sort==='featured' ? 'selected' : '' %>>
+                                        Featured
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </header>
 
             <main>
                 <div class="row product__filter">
                     <% if(products && products.length> 0) { %>
-                        <% for(let i=0; i < products.length; i++) { %>
+                        <% products.forEach(function(product) { %>
                             <div class="col-lg-3 col-md-4 col-12 col-sm-6">
                                 <div class="product-cart-wrap mb-30">
                                     <div class="product-img-action-wrap">
                                         <div class="product-img product-img-zoom">
-                                            <a href="/productDetails?id=<%=products[i]._id%>">
-                                                <img class="default-img" src="<%=products[i].productImages[0]%>"
-                                                    alt="<%=products[i].name%>">
+                                            <a href="/productDetails?id=<%= product._id %>">
+                                                <img class="default-img" src="<%= product.productImages[0] %>"
+                                                    alt="<%= product.name %>">
                                             </a>
                                         </div>
-                                        <a href="/addToWishlist?id=<%=products[i]._id%>" class="wishlist-btn">
+                                        <a href="/addToWishlist?id=<%= product._id %>" class="wishlist-btn">
                                             <i class="fas fa-heart"></i>
                                         </a>
                                     </div>
 
                                     <div class="product-content-wrap">
                                         <h6>
-                                            <%=products[i].name%>
+                                            <%= product.name %>
                                         </h6>
-                                        <h5>
-                                            <%=products[i].regularPrice%>
+                                        <h5>₹<%= product.regularPrice %>
                                         </h5>
-                                        <button onclick="addToCart('<%=products[i]._id%>')">Add to cart</button>
+                                        <button onclick="addToCart('<%= product._id %>')"
+                                            class="btn btn-sm btn-outline-primary">
+                                            Add to cart
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <% } %>
+                            <% }); %>
                                 <% } else { %>
-                                    <p>No products available</p>
-                                    <p>Debug: Products array is <%= products ? 'defined' : 'undefined' %> with length
-                                            <%= products ? products.length : 0 %>
-                                    </p>
+                                    <div class="col-12">
+                                        <p class="text-center">No products available</p>
+                                    </div>
                                     <% } %>
+                </div>
+
+                <!-- Pagination Controls -->
+                <% if (totalPages> 1) { %>
+                    <div class="pagination justify-content-center mt-4">
+                        <nav aria-label="Product navigation">
+                            <ul class="pagination">
+                                <% if (hasPreviousPage) { %>
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="/shop?page=<%= previousPage %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>"
+                                            aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <% } %>
+
+                                        <% for(let i=1; i <=totalPages; i++) { %>
+                                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                                <a class="page-link"
+                                                    href="/shop?page=<%= i %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>">
+                                                    <%= i %>
+                                                </a>
+                                            </li>
+                                            <% } %>
+
+                                                <% if (hasNextPage) { %>
+                                                    <li class="page-item">
+                                                        <a class="page-link"
+                                                            href="/shop?page=<%= nextPage %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>"
+                                                            aria-label="Next">
+                                                            <span aria-hidden="true">&raquo;</span>
+                                                        </a>
+                                                    </li>
+                                                    <% } %>
+                            </ul>
+                        </nav>
+                    </div>
+                    <% } %>
             </main>
         </div>
-        </div>
-
-        <!-- Bootstrap Bundle with Popper -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 
     </html>
 
     <script>
-      function addToCart(productId) {
-    fetch('/addToCart', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: productId })
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Failed to add to cart');
+        function addToCart(productId) {
+            fetch('/addToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: productId })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to add to cart');
+                    }
+                })
+                .then(data => {
+                    console.log('Product added to cart:', data);
+                    // Success message with two options
+                    Swal.fire({
+                        title: 'Added to Cart!',
+                        text: 'Would you like to view your cart?',
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#7066e0',
+                        confirmButtonText: 'Go to Cart',
+                        cancelButtonText: 'Continue Shopping'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/cart';
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error adding to cart:', error);
+                    // Error message
+                    Swal.fire({
+                        title: 'Oops!',
+                        text: 'Could not add the product to the cart.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6'
+                    });
+                });
         }
-    })
-    .then(data => {
-        console.log('Product added to cart:', data);
-        // Success message with two options
-        Swal.fire({
-            title: 'Added to Cart!',
-            text: 'Would you like to view your cart?',
-            icon: 'success',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#7066e0',
-            confirmButtonText: 'Go to Cart',
-            cancelButtonText: 'Continue Shopping'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '/cart';
-            }
-        });
-    })
-    .catch(error => {
-        console.error('Error adding to cart:', error);
-        // Error message
-        Swal.fire({
-            title: 'Oops!',
-            text: 'Could not add the product to the cart.',
-            icon: 'error',
-            confirmButtonColor: '#3085d6'
-        });
-    });
-}
     </script>
     </body>
 

@@ -608,10 +608,50 @@ const changePassword = async (req, res) => {
 
 const getShopPage = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 6;
+        const skip = (page - 1) * limit;
+        
+        const searchQuery = req.query.search ? req.query.search.trim() : '';
+        const sortOption = req.query.sort || 'newest';
+
+        const searchMatch = searchQuery 
+            ? { 
+                $or: [
+                    { name: { $regex: searchQuery, $options: 'i' } },
+                    { 'category.name': { $regex: searchQuery, $options: 'i' } }
+                ]
+            } 
+            : {};
 
         const categories = await Category.find({ isBlocked: false });
-        let productData = await Product.aggregate([
-            { $match: { isBlocked: false } },
+
+        let sortStage = { $sort: { createdOn: -1 } };
+        switch (sortOption) {
+            case 'price-low':
+                sortStage = { $sort: { regularPrice: 1 }};
+                break;
+            case 'price-high':
+                sortStage = { $sort: { regularPrice: -1 }};
+                break;
+            case 'name-asc':
+                sortStage = { $sort: { name: 1 } };
+                break;
+            case 'name-desc':
+                sortStage = { $sort: { name: -1 } };
+                break;
+            case 'featured':
+                sortStage = { 
+                    $sort: { 
+                        isFeatured: -1,
+                        createdOn: -1 
+                    } 
+                };
+                break;
+        }
+
+        const productPipeline = [
+            { $match: { isBlocked: false, ...searchMatch } },
             {
                 $lookup: {
                     from: "categories",
@@ -620,53 +660,56 @@ const getShopPage = async (req, res) => {
                     as: "category"
                 }
             },
-            { $unwind: "$category" }
+            { $unwind: "$category" },
+            sortStage,
+            { $skip: skip },
+            { $limit: limit }
+        ];
+
+        const totalProductsPipeline = [
+            { $match: { isBlocked: false, ...searchMatch } }
+        ];
+
+        const [productData, totalProductsCount] = await Promise.all([
+            Product.aggregate(productPipeline),
+            Product.countDocuments({ isBlocked: false, ...searchMatch })
         ]);
 
-        // console.log("Found products:", productData);
+        const totalPages = Math.ceil(totalProductsCount / limit);
 
-
-        productData.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
-        productData = productData.slice(0, 7);
-
-
-        if (!req.session.user) {
-            return res.render("shop", {
-                user: null,
-                products: productData,
-                categories: categories
-            });
-        }
-
-
-        const userData = await User.findOne({ _id: req.session.user._id });
-
-
-        if (!userData) {
-            return res.render("shop", {
-                user: null,
-                products: productData,
-                categories: categories
-            });
+        let userData = null;
+        if (req.session.user) {
+            userData = await User.findOne({ _id: req.session.user._id });
         }
 
         return res.render("shop", {
             user: userData,
             products: productData,
-            categories: categories
+            categories: categories,
+            currentPage: page,
+            totalPages: totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+            nextPage: page + 1,
+            previousPage: page - 1,
+            searchQuery: searchQuery,
+            sort: sortOption
         });
 
     } catch (error) {
-        console.error("Error loading homepage:", error);
+        console.error("Error loading shop page:", error);
         return res.render("shop", {
             user: null,
             products: [],
             categories: [],
-            error: "Error loading homepage"
+            currentPage: 1,
+            totalPages: 0,
+            searchQuery: '',
+            sort: 'newest',
+            error: "Error loading shop page"
         });
     }
 };
-
 
 
 
@@ -693,6 +736,6 @@ module.exports = {
     postNewPassword,
     showChangePassword,
     changePassword,
-    getShopPage
-
+    getShopPage,
+    
 } 

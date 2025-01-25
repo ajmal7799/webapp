@@ -65,7 +65,7 @@ router.post('/change-password',userAuth, userController.changePassword);
 
 
 // shop page
-router.get("/shopPage",userController.getShopPage)
+router.get("/shop",userController.getShopPage)
 
 
 
@@ -73,8 +73,15 @@ router.get("/shopPage",userController.getShopPage)
 // Cart Controller
 router.get("/cartPage",userAuth,cartController.getCartPage);
 router.post("/addToCart", userAuth, cartController.addToCart)
-router.post("/remove",userAuth,cartController.removeFromCart)
+router.post("/remove",userAuth,cartController.removeFromCart) 
 router.post("/api/cart/update", userAuth, cartController.updateCartQuantity)
 
+
+
+
+// checkout page 
+router.get("/checkout",userAuth,cartController.getCheckoutPage)
+router.post('/add-address', userAuth, cartController.addAddress);
+router.get('/delete-address/:id',userAuth,cartController.deleteAddress)
 
 module.exports = router;
