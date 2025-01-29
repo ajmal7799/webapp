@@ -7,6 +7,7 @@ const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
 const { text } = require("express");
 // const { render } = require("ejs");
+const mongoose = require('mongoose');
 
 
 const pageNotFound = (req, res) => {
@@ -606,7 +607,7 @@ const changePassword = async (req, res) => {
     }
 }
 
-const getShopPage = async (req, res) => {
+const  getShopPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 6;
@@ -614,17 +615,22 @@ const getShopPage = async (req, res) => {
         
         const searchQuery = req.query.search ? req.query.search.trim() : '';
         const sortOption = req.query.sort || 'newest';
+        
+        // Get selected category from query
+        const selectedCategory = req.query.category || '';
 
-        const searchMatch = searchQuery 
-            ? { 
-                $or: [
-                    { name: { $regex: searchQuery, $options: 'i' } },
-                    { 'category.name': { $regex: searchQuery, $options: 'i' } }
-                ]
-            } 
-            : {};
+        // Build match conditions
+        let matchConditions = { isBlocked: false };
 
-        const categories = await Category.find({ isBlocked: false });
+        // Add search conditions if search query exists
+        if (searchQuery) {
+            matchConditions.name = { $regex: searchQuery, $options: 'i' };
+        }
+
+        // Add category filter if category is selected
+        if (selectedCategory) {
+            matchConditions.category_id = selectedCategory;
+        }
 
         let sortStage = { $sort: { createdOn: -1 } };
         switch (sortOption) {
@@ -650,8 +656,11 @@ const getShopPage = async (req, res) => {
                 break;
         }
 
+        // Get all active categories
+        const categories = await Category.find({ isBlocked: false });
+
         const productPipeline = [
-            { $match: { isBlocked: false, ...searchMatch } },
+            { $match: matchConditions },
             {
                 $lookup: {
                     from: "categories",
@@ -666,13 +675,9 @@ const getShopPage = async (req, res) => {
             { $limit: limit }
         ];
 
-        const totalProductsPipeline = [
-            { $match: { isBlocked: false, ...searchMatch } }
-        ];
-
         const [productData, totalProductsCount] = await Promise.all([
             Product.aggregate(productPipeline),
-            Product.countDocuments({ isBlocked: false, ...searchMatch })
+            Product.countDocuments(matchConditions)
         ]);
 
         const totalPages = Math.ceil(totalProductsCount / limit);
@@ -686,6 +691,7 @@ const getShopPage = async (req, res) => {
             user: userData,
             products: productData,
             categories: categories,
+            selectedCategory: selectedCategory,
             currentPage: page,
             totalPages: totalPages,
             hasNextPage: page < totalPages,
@@ -702,6 +708,7 @@ const getShopPage = async (req, res) => {
             user: null,
             products: [],
             categories: [],
+            selectedCategory: '',
             currentPage: 1,
             totalPages: 0,
             searchQuery: '',
@@ -710,9 +717,6 @@ const getShopPage = async (req, res) => {
         });
     }
 };
-
-
-
 
 module.exports = {
     loadHomepage,

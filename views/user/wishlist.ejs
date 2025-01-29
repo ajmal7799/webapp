@@ -1,0 +1,222 @@
+<%- include('../partials/user/header') %>
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>My Wishlist</title>
+        <style>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+
+            th,
+            td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+
+            th {
+                background-color: #f4f4f4;
+            }
+
+            .product-img {
+                width: 80px;
+                height: 80px;
+                object-fit: cover;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin: 2px;
+            }
+
+            .btn-delete {
+                background-color: #ff4444;
+                color: white;
+            }
+
+            .btn-cart {
+                background-color: #4CAF50;
+                color: white;
+            }
+
+            .empty-message {
+                text-align: center;
+                padding: 20px;
+                color: #666;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <h2>My Wishlist</h2>
+
+            <% if (wishlist&& wishlist.books.length> 0) { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% wishlist.books.forEach(item=> { %>
+                            <tr>
+                                <td>
+                                    <img src="<%= item.product.productImages && item.product.productImages.length > 0 ? item.product.productImages[0] : '/path/to/default/image.jpg' %>"
+                                        alt="<%= item.product.name %>" class="img-fluid rounded" width="100"
+                                        height="125">
+                                </td>
+                                <td>
+                                    <%= item.product.name %>
+                                </td>
+                                <td>₹<%= item.product.regularPrice.toFixed(2) %>
+                                </td>
+                                <td>
+                                    <form action="/wishlist/remove/<%= item.product._id %>" method="DELETE"
+                                        style="display: inline;">
+                                        <button type="submit" class="btn btn-delete"
+                                            onclick="removeFromWishlist('<%= item.product._id %>');return false;">Delete</button>
+                                    </form>
+                                    <form action="/addToCart/<%= item.product._id %>" method="POST"
+                                        style="display: inline;">
+                                        <button type="button" class="btn btn-success btn-sm"
+                                            onclick="addToCart('<%= item.product._id %>')">
+                                            Add to Cart
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+                <% } else { %>
+                    <div class="empty-message">
+                        <p>Your wishlist is empty</p>
+                    </div>
+                    <% } %>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    </body>
+
+    </html>
+    <script>
+        function addToCart(productId) {
+            fetch('/addToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: productId })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to add to cart');
+                    }
+                })
+                .then(data => {
+                    console.log('Product added to cart:', data);
+                    // Success message with two options
+                    Swal.fire({
+                        title: 'Added to Cart!',
+                        text: 'Would you like to view your cart?',
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#7066e0',
+                        confirmButtonText: 'Go to Cart',
+                        cancelButtonText: 'Continue Shopping'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/cartPage';
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error adding to cart:', error);
+                    // Error message
+                    Swal.fire({
+                        title: 'Oops!',
+                        text: 'Could not add the product to the cart.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6'
+                    });
+                });
+        }
+
+        function removeFromWishlist(productId) {
+    Swal.fire({
+        title: 'Remove Book',
+        text: 'Are you sure you want to remove this book from wishlist?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/wishlist/remove/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Book removed from wishlist'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+                Toast.fire({
+                    icon: 'error',
+                    title: error.message || 'Could not remove item from wishlist'
+                });
+            });
+        }
+    });
+}
+    </script>
+    <%- include('../partials/user/footer') %>

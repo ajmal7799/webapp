@@ -197,8 +197,7 @@
                 <div class="mt-3">
                     <button class="btn btn-success btn-block" <%=(cart && cart.books && cart.books.length> 0) ? '' :
                         'disabled' %>
-                        onclick="document.getElementById('selectAddressForm').submit();"
-                        >
+                        onclick="handlePlaceOrder()">
                         Place Order
                     </button>
                 </div>
@@ -258,31 +257,147 @@
         </div>
     </div>
 
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const editButtons = document.querySelectorAll('.edit-address');
-            editButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const id = this.getAttribute('data-id');
-                    const city = this.getAttribute('data-city');
-                    const state = this.getAttribute('data-state');
-                    const pincode = this.getAttribute('data-pincode');
-                    const landmark = this.getAttribute('data-landmark');
-                    const alternative = this.getAttribute('data-alternative');
-                    const type = this.getAttribute('data-type');
 
-                    document.getElementById('addressId').value = id;
-                    document.getElementById('cityInput').value = city;
-                    document.getElementById('stateInput').value = state;
-                    document.getElementById('pincodeInput').value = pincode;
-                    document.getElementById('landmarkInput').value = landmark;
-                    document.getElementById('alternateInput').value = alternative;
-                    document.getElementById('addressTypeInput').value = type;
-
-                    $('#addressModal').modal('show');
+        function handlePlaceOrder() {
+            // Validate Address Selection
+            const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+            if (!selectedAddress) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Address Required',
+                    text: 'Please select a shipping address'
                 });
+                return;
+            }
+
+            // Validate Payment Method
+            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!selectedPaymentMethod) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Method Required',
+                    text: 'Please select a payment method'
+                });
+                return;
+            }
+
+            // Prepare Order Data
+            const orderData = {
+                selectedAddress: selectedAddress.value,
+                paymentMethod: selectedPaymentMethod.value
+            };
+
+            // Additional Payment Method Details
+            if (selectedPaymentMethod.value === 'online') {
+                const onlinePaymentMethod = document.getElementById('onlinePaymentMethod');
+                if (!onlinePaymentMethod.value) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Method Required',
+                        text: 'Please select an online payment method'
+                    });
+                    return;
+                }
+                orderData.onlinePaymentMethod = onlinePaymentMethod.value;
+            }
+
+            // Wallet Payment Logic
+            if (selectedPaymentMethod.value === 'wallet') {
+                orderData.useFullWallet = document.getElementById('useFullWallet').checked;
+            }
+
+
+            fetch('/place-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(orderData)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || 'Order placement failed');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Order Placed!',
+                        text: 'Your order has been successfully processed',
+                        confirmButtonText: 'View Order'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = `/order/${data.orderId}`;
+                        }
+                    });
+                })
+                .catch(error => {
+                    // console.error('Order Placement Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Order Failed',
+                        text: error.message || 'Unable to place order. Please try again.'
+                    });
+                });
+        }
+
+        function calculateTotal() {
+            const cartItems = document.querySelectorAll('.cart-item');
+            let total = 0;
+            cartItems.forEach(item => {
+                const price = parseFloat(item.dataset.price);
+                const quantity = parseInt(item.querySelector('.quantity').value);
+                total += price * quantity;
             });
+            document.getElementById('cartTotal').textContent = total.toFixed(2);
+        }
+        
+
+
+        // Add this to your checkout page JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle edit address buttons
+    const editButtons = document.querySelectorAll('.edit-address');
+    
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Get address data from data attributes
+            const addressId = this.getAttribute('data-id');
+            const city = this.getAttribute('data-city');
+            const state = this.getAttribute('data-state');
+            const pincode = this.getAttribute('data-pincode');
+            const landmark = this.getAttribute('data-landmark');
+            const alternative = this.getAttribute('data-alternative');
+            const addressType = this.getAttribute('data-type');
+            
+            // Populate the modal form
+            document.getElementById('addressId').value = addressId;
+            document.getElementById('cityInput').value = city;
+            document.getElementById('stateInput').value = state;
+            document.getElementById('pincodeInput').value = pincode;
+            document.getElementById('landmarkInput').value = landmark;
+            document.getElementById('alternateInput').value = alternative || '';
+            document.getElementById('addressTypeInput').value = addressType.toLowerCase();
+            
+            // Show the modal
+            $('#addressModal').modal('show');
         });
+    });
+
+    // Reset form when modal is closed
+    $('#addressModal').on('hidden.bs.modal', function() {
+        document.getElementById('addressForm').reset();
+        document.getElementById('addressId').value = '';
+    });
+});
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <%- include('../partials/user/footer') %>

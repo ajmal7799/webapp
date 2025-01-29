@@ -18,14 +18,14 @@ const getCartPage = async (req, res) => {
 
 const addToCart = async (req, res) => {
     try {
-        const { id } = req.body; // Product ID
+        const { id } = req.body; 
         const userId = req.user._id;
 
         const product = await Product.findById(id);
         if (!product) {
             return res.status(404).json({
                 success: false,
-                message: "Product not found"
+                message: "Product not found",
             });
         }
 
@@ -42,7 +42,7 @@ const addToCart = async (req, res) => {
                 userId,
                 books: [{
                     product: id,
-                    availableQuantity: 1
+                    availableQuantity: 1,
                 }]
             });
         } else {
@@ -133,7 +133,7 @@ const removeFromCart = async (req, res) => {
         });
     }
 };
-
+ 
 const updateCartQuantity = async (req, res) => {
     try {
         const { productId, action } = req.body;
@@ -249,6 +249,7 @@ const deleteAddress = async(req,res)=>{
         
     }
 }
+
 
 
 module.exports = {

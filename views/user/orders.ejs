@@ -1,0 +1,166 @@
+<%- include('../partials/user/header') %>
+
+    <div class="container mt-4">
+      
+        
+        <div class="mb-3">
+            <a href="/userprofile" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+        <h2 class="mb-4">My Orders</h2>
+        <% if (orders && orders.length> 0) { %>
+            <% orders.forEach(order=> { %>
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between">
+                        <strong>Order #<%= order._id %></strong>
+                        <span class="badge 
+                        <%= order.orderStatus === 'pending' ? 'bg-warning' : 
+                            order.orderStatus === 'shipped' ? 'bg-info' : 
+                            order.orderStatus === 'delivered' ? 'bg-success' : 
+                            'bg-secondary' %>">
+                            <%= order.orderStatus.toUpperCase() %>
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <% order.products.forEach(item=> { %>
+                            <div class="row align-items-center border-bottom pb-3 mb-3">
+                                <div class="col-md-2">
+                                    <img src="<%= item.product.productImages[0] %>" class="img-fluid rounded"
+                                        alt="<%= item.product.name %>">
+                                </div>
+                                <div class="col-md-5">
+                                    <h5>
+                                        <%= item.product.name %>
+                                    </h5>
+                                    <p>Quantity: <%= item.quantity %>
+                                    </p>
+                                    <p>Price: ₹<%= item.price.toFixed(2) %>
+                                    </p>
+                                </div>
+                                <div class="col-md-5 text-right">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-info btn-sm"
+                                            onclick="viewOrderDetails('<%= order._id %>')">
+                                            View Details
+                                        </button>
+                                        <% if (order.orderStatus==='pending' ) { %>
+                                            <button class="btn btn-danger btn-sm"
+                                                onclick="cancelOrder('<%= order._id %>')">
+                                                Cancel Order
+                                            </button>
+                                            <% } %>
+                                                <% if (order.orderStatus==='delivered' ) { %>
+                                                    <button class="btn btn-warning btn-sm"
+                                                        onclick="initiateReturn('<%= order._id %>', '<%= item.product._id %>')">
+                                                        Return Item
+                                                    </button>
+                                                    <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                            <% }); %>
+                                <div class="text-right">
+                                    <strong>Total Amount: ₹<%= order.totalAmount.toFixed(2) %></strong>
+                                </div>
+                    </div>
+                </div>
+                <% }); %>
+                    <nav aria-label="Order navigation">
+                        <ul class="pagination justify-content-center">
+                            <% if (hasPreviousPage) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=<%= previousPage %>">Previous</a>
+                                </li>
+                                <% } %>
+
+                                    <% for(let i=1; i <=totalPages; i++) { %>
+                                        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                            <a class="page-link" href="?page=<%= i %>">
+                                                <%= i %>
+                                            </a>
+                                        </li>
+                                        <% } %>
+
+                                            <% if (hasNextPage) { %>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=<%= nextPage %>">Next</a>
+                                                </li>
+                                                <% } %>
+                        </ul>
+                    </nav>
+
+
+
+                    <% } else { %>
+                        <div class="alert alert-info text-center">
+                            You haven't placed any orders yet.
+                        </div>
+                        <% } %>
+    </div>
+
+    <script>
+        function viewOrderDetails(orderId) {
+            window.location.href = `/order/${orderId}`;
+        }
+
+        function cancelOrder(orderId) {
+            Swal.fire({
+                title: 'Cancel Order',
+                text: 'Are you sure you want to cancel this order?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, Cancel Order',
+                 cancelButtonText: 'No, Keep Order'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/cancel-order/${orderId}`, {
+                        method: 'POST', headers: {
+                            'Content-Type': 'application/json'
+
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        });
+                }
+            });
+        }
+
+        function initiateReturn(orderId, productId) {
+            Swal.fire({
+                title: 'Return Item',
+                text: 'Are you sure you want to return this item?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Return Item'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/return-order/${orderId}/${productId}`, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Returned!', 'Your return request is processed.', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        });
+                }
+            });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+    <%- include('../partials/user/footer') %>

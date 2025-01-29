@@ -1,0 +1,179 @@
+<%- include("../../views/partials/admin/header") %>
+
+link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container mt-4">
+    <br>
+    <br>
+    <div class="mb-3">
+        <a href="/admin/order" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Order Details</h3>
+            <div>
+                <span class="badge badge-primary mr-2">
+                    Order ID: <%= order._id %>
+                </span>
+                <span class="badge badge-info">
+                    Ordered on: <%= new Date(order.createdAt).toLocaleDateString() %>
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h4>Products</h4>
+                    <% order.products.forEach(item => { %>
+                        <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                            <img src="<%= item.product.productImages[0] %>" 
+                                 alt="<%= item.product.name %>" 
+                                 class="img-thumbnail mr-3" 
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <h5><%= item.product.name %></h5>
+                                <p class="mb-0">
+                                    Price: ₹<%= item.price.toFixed(2) %> 
+                                    | Quantity: <%= item.quantity %>
+                                </p>
+                                <p class="mb-0">
+                                    Total: ₹<%= (item.price * item.quantity).toFixed(2) %>
+                                </p>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+                <div class="col-md-4">
+                    <h4>Order Summary</h4>
+                    <div class="border p-3">
+                        <p class="d-flex justify-content-between">
+                            <span>Subtotal:</span>
+                            <span>₹<%= order.totalAmount.toFixed(2) %></span>
+                        </p>
+                        <p class="d-flex justify-content-between">
+                            <span>Shipping:</span>
+                            <span>₹40.00</span>
+                        </p>
+                        <hr>
+                        <h5 class="d-flex justify-content-between">
+                            <span>Total:</span>
+                            <span>₹<%= (order.totalAmount + 40).toFixed(2) %></span>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h4>Shipping Address</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="mb-1"><%= order.shippingAddress.addressType %> Address</p>
+                            <p class="mb-1">
+                                <%= order.shippingAddress.city %>, 
+                                <%= order.shippingAddress.state %> - 
+                                <%= order.shippingAddress.pin_code %>
+                            </p>
+                            <p class="mb-1">
+                                Landmark: <%= order.shippingAddress.landmark %>
+                            </p>
+                            <% if (order.shippingAddress.alternative_no) { %>
+                                <p class="mb-0">
+                                    Alt. Phone: <%= order.shippingAddress.alternative_no %>
+                                </p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Order Status</h4>
+                    <div class="alert <%= 
+                        order.orderStatus === 'pending' ? 'alert-warning' : 
+                        order.orderStatus === 'processing' ? 'alert-info' : 
+                        order.orderStatus === 'shipped' ? 'alert-primary' : 
+                        order.orderStatus === 'delivered' ? 'alert-success' : 
+                        'alert-danger'
+                    %>">
+                        <%= order.orderStatus.toUpperCase() %>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <% if (order.orderStatus === 'pending') { %>
+                        
+                    <% } %>
+                    <% if (order.orderStatus === 'delivered') { %>
+                        <button class="btn btn-warning" onclick="initiateReturn('<%= order._id %>')">
+                            Return Order
+                        </button>
+                    <% } %>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="downloadInvoice('<%= order._id %>')">
+                        Download Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelOrder(orderId) {
+    Swal.fire({
+        title: 'Cancel Order',
+        text: 'Are you sure you want to cancel this order?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Yes, Cancel Order'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/update-order-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId, newStatus: 'cancelled' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success')
+                    .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            });
+        }
+    });
+}
+
+function initiateReturn(orderId) {
+    Swal.fire({
+        title: 'Return Order',
+        text: 'Are you sure you want to return this order?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Return Order'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/orders/${orderId}/return`;
+        }
+    });
+}
+
+function downloadInvoice(orderId) {
+    window.location.href = `/orders/${orderId}/invoice`;
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<%- include("../../views/partials/admin/footer") %>

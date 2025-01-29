@@ -249,45 +249,49 @@
         <div class="container">
             <header class="shop-header">
                 <h1>Our Products</h1>
-
-                <!-- Search and Sort Form -->
-                <form action="/shop" method="GET" class="search-form mb-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="text" name="search" class="form-control" placeholder="Search products..."
-                                    value="<%= searchQuery || '' %>">
-                                <button class="btn btn-primary" type="submit">Search</button>
-                            </div>
+                <div class="form-container">
+                    <form action="/shop" method="GET" class="search-form mb-4">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="Search products..."
+                                value="<%= searchQuery || '' %>">
+                            <button class="btn btn-primary" type="submit">Search</button>
                         </div>
-                        <div class="col-md-6 sort-dropdown">
-                            <div class="input-group">
-                                <select name="sort" class="form-control" onchange="this.form.submit()">
-                                    <option value="select">Select one</option>
-                                    <option value="newest" <%=sort==='newest' ? 'selected' : '' %>>
-                                        New Arrivals
-                                    </option>
-                                    <option value="price-low" <%=sort==='price-low' ? 'selected' : '' %>>
-                                        Price Low to High
-                                    </option>
-                                    <option value="price-high" <%=sort==='price-high' ? 'selected' : '' %>>
-                                        Price High to Low
-                                    </option>
-                                    <option value="name-asc" <%=sort==='name-asc' ? 'selected' : '' %>>
-                                        Name A to Z
-                                    </option>
-                                    <option value="name-desc" <%=sort==='name-desc' ? 'selected' : '' %>>
-                                        Name Z to A
-                                    </option>
-                                    <option value="featured" <%=sort==='featured' ? 'selected' : '' %>>
-                                        Featured
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
+                    </form>
+                    <div class="sort-dropdown">
+                        <select name="sort" class="form-control" onchange="this.form.submit()">
+                            <option value="select">Select one</option>
+                            <option value="newest" <%=sort==='newest' ? 'selected' : '' %>>New Arrivals</option>
+                            <option value="price-low" <%=sort==='price-low' ? 'selected' : '' %>>Price Low to High
+                            </option>
+                            <option value="price-high" <%=sort==='price-high' ? 'selected' : '' %>>Price High to Low
+                            </option>
+                            <option value="name-asc" <%=sort==='name-asc' ? 'selected' : '' %>>Name A to Z</option>
+                            <option value="name-desc" <%=sort==='name-desc' ? 'selected' : '' %>>Name Z to A</option>
+                            <option value="featured" <%=sort==='featured' ? 'selected' : '' %>>Featured</option>
+                        </select>
                     </div>
-                </form>
+                </div>
             </header>
+
+            <div class="card-body">
+                <form action="/shop" method="GET" id="categoryFilterForm">
+                    <input type="hidden" name="sort" value="<%= sort || 'newest' %>">
+                    <input type="hidden" name="search" value="<%= searchQuery || '' %>">
+
+                    <% categories.forEach(function(category) { %>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="categories"
+                                value="<%= category._id %>" id="category-<%= category._id %>"
+                                <%=selectedCategories.includes(category._id.toString()) ? 'checked' : '' %>
+                            onchange="this.form.submit()">
+                            <label class="form-check-label" for="category-<%= category._id %>">
+                                <%= category.name %> (<%= category.count %>)
+                            </label>
+                        </div>
+                        <% }); %>
+                </form>
+            </div>
+
 
             <main>
                 <div class="row product__filter">
@@ -302,7 +306,8 @@
                                                     alt="<%= product.name %>">
                                             </a>
                                         </div>
-                                        <a href="/addToWishlist?id=<%= product._id %>" class="wishlist-btn">
+                                        <a href="/addToWishlist" class="wishlist-btn"
+                                            onclick="event.preventDefault(); addToWishlist('<%= product._id %>')">
                                             <i class="fas fa-heart"></i>
                                         </a>
                                     </div>
@@ -368,13 +373,19 @@
             </main>
         </div>
     </body>
-    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 
     </html>
 
     <script>
+        document.querySelectorAll('.form-check-input').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                document.getElementById('categoryFilterForm').submit();
+            });
+        });
+
         function addToCart(productId) {
             fetch('/addToCart', {
                 method: 'POST',
@@ -404,7 +415,7 @@
                         cancelButtonText: 'Continue Shopping'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = '/cart';
+                            window.location.href = '/cartPage';
                         }
                     });
                 })
@@ -416,6 +427,60 @@
                         text: 'Could not add the product to the cart.',
                         icon: 'error',
                         confirmButtonColor: '#3085d6'
+                    });
+                });
+        }
+
+        function addToWishlist(productId) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: true,
+                // showCancelButton: true,
+                confirmButtonText: 'Go To Wishlist',
+                // cancelButtonText: 'Continue Shopping',
+                confirmButtonColor: '#3085d6',
+                // cancelButtonColor: '#7066e0',
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            fetch('/addToWishlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: productId })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to add to wishlist')
+                    }
+                })
+                .then(data => {
+                    console.log(data, "data")
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Added to Wishlist!',
+                        text: 'Would you like to view your wishlist?'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/wishlist';
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.log(error, "errorrrr")
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Oops!',
+                        text: 'Could not add the product to the wishlist.'
                     });
                 });
         }

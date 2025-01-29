@@ -260,7 +260,11 @@ function addToCart(productId) {
     })
     .then(data => {
         console.log('Product added to cart:', data);
-        // Success message with two options
+
+        if (!data.success) { 
+            throw new Error(data.message || 'Failed to add to wishlist');
+        }
+       
         Swal.fire({
             title: 'Added to Cart!',
             text: 'Would you like to view your cart?',
@@ -280,6 +284,49 @@ function addToCart(productId) {
         console.error('Error adding to cart:', error);
         // Error message
         Swal.fire({
+            title: 'Oops!',
+            text: 'Could not add the product to the cart.',
+            icon: 'error',
+            confirmButtonColor: '#3085d6'
+        });
+    });
+}
+
+function addToWishlist(productId){
+    fetch('/addToWishlist',{
+        method:'POST',
+        headers:{
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id:productId })
+    })
+    .then(response=>{
+        if(response.ok){
+            return response.json();
+        }else{
+            throw new Error('failed to add to wishlist')
+        }
+    })
+    .then(data =>{
+        console.log(data,"data")
+        Swal.fire({
+            title: 'Added to Wishlist!',
+            text:  "Would you like to view your wishlist?",
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#7066e0',
+            confirmButtonText: 'Go To Wishlist',
+            cancelButtonText: 'Continue Shopping'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/wishlist';
+            }
+        });
+    })
+    .catch(error =>{
+        console.log(error,"errorrrr")
+         Swal.fire({
             title: 'Oops!',
             text: 'Could not add the product to the cart.',
             icon: 'error',

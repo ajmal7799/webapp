@@ -1,0 +1,118 @@
+<%- include("../../views/partials/admin/header") %>
+    <br>
+    <br>
+    <div class="container-fluid px-4 mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0">Admin Orders Management</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer Email</th>
+                                        <th>Order Date</th>
+                                        <th>Total Amount</th>
+                                        <th>Payment Method</th>
+                                        <th>Order Status</th>
+                                        <th>More details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% orders.forEach(order=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= order._id %>
+                                            </td>
+                                            <td>
+                                                <%= order.userId.email %>
+                                            </td>
+                                            <td>
+                                                <%= order.formatdate %>
+                                            </td>
+                                            <td>₹<%= order.totalAmount.toFixed(2) %>
+                                            </td>
+                                            <td>
+                                                <%= order.paymentMethod %>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn 
+                                                    <%= order.orderStatus === 'pending' ? 'btn-warning' : 
+                                                        order.orderStatus === 'shipped' ? 'btn-info' : 
+                                                        order.orderStatus === 'delivered' ? 'btn-success' : 
+                                                        order.orderStatus === 'cancelled' ? 'btn-danger' : 
+                                                        'btn-secondary' %> dropdown-toggle" type="button"
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <%= order.orderStatus.toUpperCase() %>
+                                                    </button>
+                                                    <% if (order.orderStatus==='cancelled' ) { %>
+                                                        <ul></ul>
+                                                        <% } else { %>
+                                                            <ul class="dropdown-menu">
+                                                                <% const statuses=['pending', 'shipped' , 'delivered' ];
+                                                                    statuses.forEach(status=> {
+                                                                    if (status !== order.orderStatus) {
+                                                                    %>
+                                                                    <li>
+                                                                        <a class="dropdown-item" href="#"
+                                                                            onclick="updateOrderStatus('<%= order._id %>', '<%= status %>')">
+                                                                            <%= status.toUpperCase() %>
+                                                                            </a>
+                                                                    </li>
+                                                                    <% } }); %>
+                                                            </ul>
+                                                            <% } %>
+
+
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="/admin/order-details/<%= order._id %>"
+                                                        class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-eye"></i> View
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Include SweetAlert2 library -->
+    <script>
+        function updateOrderStatus(orderId, newStatus) {
+            fetch('/admin/update-order-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId, newStatus })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Updated!', 'Order status has been updated.', 'success')
+                            .then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'An error occurred while updating the order status.', 'error');
+                });
+        } 
+    </script>
+
+    <%- include("../../views/partials/admin/footer") %>

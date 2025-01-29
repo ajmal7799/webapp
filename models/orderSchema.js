@@ -1,44 +1,44 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const {v4:uuidv4}=require('uuid');
+
 
 const orderSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
-        ref: "User", 
+        ref: "User",
         required: true
     },
-    products: [
-        {
-            product: {
-                type: Schema.Types.ObjectId,
-                ref: "Product", 
-                required: true
-            },
-            quantity: {
-                type: Number, 
-                required: true
-            },
-            price: {
-                type: Number,
-                required: true
-            }
-        }
-    ],
-    totalAmount: {
-        type: Number, 
-        required: true
+    orderId:{
+        type:String,
+        default:()=>uuidv4(),
+        unique:true
     },
+    products: [{
+        product: {
+            type: Schema.Types.ObjectId,
+            ref: "Product",
+            required: true
+        },
+        quantity: {
+            type: Number,
+            required: true
+        },
+        price: {
+            type: Number,
+            required: true
+        },
+        orderStatus: {
+            type: String,
+            enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+            default: 'pending'
+        },
+    }],
     shippingAddress: {
-        fullName: {
-            type: String,
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
             required: true
-        },
-        addressLine1: {
-            type: String,
-            required: true
-        },
-        addressLine2: {
-            type: String
         },
         city: {
             type: String,
@@ -48,48 +48,59 @@ const orderSchema = new Schema({
             type: String,
             required: true
         },
-        zipCode: {
+        pin_code: {
             type: String,
             required: true
         },
-        country: {
+        landmark: {
             type: String,
             required: true
         },
-        phone: {
+        alternative_no: {
+            type: String
+        },
+        addressType: {
             type: String,
+            enum: ["home", "office", "other"],
             required: true
         }
     },
+    totalAmount: {
+        type: Number,
+        required: true
+    },
+    discount: {
+        type: Number,
+        default: 0
+    },
     paymentMethod: {
         type: String,
-        enum: ["COD", "Credit Card", "Debit Card", "Net Banking", "Wallet", "UPI"],
+        enum: ['cod', 'online', 'wallet'],
         required: true
     },
     paymentStatus: {
         type: String,
-        enum: ["Pending", "Paid", "Failed"],
-        default: "Pending"
+        enum: ['pending', 'completed', 'failed'],
+        default: 'pending'
     },
     orderStatus: {
         type: String,
-        enum: ["Placed", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"],
-        default: "Placed"
+        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+        default: 'pending'
     },
-    isDeleted: {
-        type: Boolean,
-        default: false
+    couponApplied: {
+        type: String
     },
-    orderedAt: {
+    transactionId: {
+        type: String
+    },
+    createdAt: {
         type: Date,
-        default: Date.now 
-    },
-    deliveredAt: {
-        type: Date 
+        default: Date.now
     }
-}, {
+}, { 
     timestamps: true 
 });
 
-const Order = mongoose.model("Order", orderSchema);
+const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;
