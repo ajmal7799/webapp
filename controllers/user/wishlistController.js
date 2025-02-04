@@ -38,7 +38,7 @@ const addToWishlist = async(req,res)=>{
             });
         }
         let wishlist = await Wishlist.findOne({userId});
-        console.log(wishlist,"wish")
+        // console.log(wishlist,"wish") 
 
         if(!wishlist){
             wishlist = new Wishlist({ userId, books: [] });

@@ -6,37 +6,50 @@ const Address = require("../../models/addressSchema");
 const { format } = require("path");
 
 
+
+
 const getOrders = async (req, res) => {
     try {
-        
-        
+        const page = parseInt(req.query.page) || 1; 
+        const limit = 7; 
+        const skip = (page - 1) * limit;
+
+        const totalOrders = await Order.countDocuments();
+        const totalPages = Math.ceil(totalOrders / limit);
+
         const orders = await Order.find()
             .populate('userId')
-            .sort({ createdAt: -1 });
-        orders.forEach(element => {
-            const date = String(element.createdAt.getDate())
-            const month = String(element.createdAt.getMonth() + 1)
-            const year = element.createdAt.getFullYear()
-            return element.formatdate = `${date}-${month}-${year}`
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
-        })
+        // Format dates
+        orders.forEach(element => {
+            const date = String(element.createdAt.getDate());
+            const month = String(element.createdAt.getMonth() + 1);
+            const year = element.createdAt.getFullYear();
+            element.formatdate = `${date}-${month}-${year}`;
+        });
 
         res.render('order', {
             orders,
-            title: `Order #${orders._id}`,
+            title: `Orders Management`,
+            pagination: {
+                page,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+                nextPage: page + 1,
+                prevPage: page - 1,
+                lastPage: totalPages
+            }
         });
-
 
     } catch (error) {
         console.error('Error fetching order details:', error);
         res.status(500).render('error', { message: 'Error retrieving order details' });
     }
 }
-
-
-
-
-
 
 
 const orderDetails = async (req, res) => {

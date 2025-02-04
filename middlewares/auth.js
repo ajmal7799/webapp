@@ -8,7 +8,7 @@ const userAuth = (req,res,next)=>{
             if(data && !data.isBlocked){
                 next()
             }else{
-                res.redirect("/login");
+                res.redirect("/login"); 
             }
         })
         .catch(error=>{

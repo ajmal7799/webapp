@@ -1,0 +1,124 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+    /* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    padding: 20px;
+    color: #333;
+}
+
+/* Coupon Page Container */
+.coupon-page {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Coupon Form */
+.coupon-form {
+    flex: 1;
+    max-width: 400px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.coupon-form h2 {
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.coupon-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.coupon-form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.coupon-form .btn {
+    background-color: #28a745;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.coupon-form .btn:hover {
+    background-color: #218838;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .coupon-form {
+        flex-direction: column;
+    }
+}
+.coupon-form {
+        position: absolute;
+        top: 70px;
+        left: 240px;
+        width: calc(100% - 240px);
+        padding: 2rem;
+    }
+    @media (max-width: 1000px) {
+        .coupon-form {
+        position: absolute;
+        top: 50px;
+        left: 20px;
+        width: calc(100% - 30px);
+        padding: 2rem;
+    }
+    }
+</style>
+<body>
+    
+        <div class="coupon-form">
+            <h2>Add a Coupon</h2>
+            <form id="add-coupon-form" method="post" action="/admin/editCoupon?id=<%= coupon._id%>">
+                <label for="coupon-code">Coupon Code:</label>
+                <input type="text" id="coupon-code" name="code" value="<%= coupon.name%>" placeholder="Enter coupon code" required>
+    
+                <label for="offer-price">Offer Price (₹):</label>
+                <input type="number" id="offer-price" name="offerPrice" value="<%= coupon.offerPrice%>" placeholder="Enter offer price" required>
+    
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" name="createon" value="<%= coupon.createon%>" required>
+    
+                <label for="expiry-date">Expiry Date:</label>
+                <input type="date" id="expiry-date" name="expireOn" value="<%= coupon.expireOn%>" required>
+    
+                <label for="min-amount">Minimum Amount (₹):</label>
+                <input type="number" id="min-amount" name="minimumPrice" value="<%= coupon.minimumPrice%>" placeholder="Enter minimum order amount" required>
+    
+                <label for="usage-limit">Usage Limit (Optional):</label>
+                <input type="number" id="usage-limit" name="UsageLimit" value="<%= coupon.UsageLimit%>"  placeholder="Enter usage limit">
+    
+                <label for="is-list">Active:</label>
+                <select id="is-list" name="isList">
+                    <option value="true" selected>Yes</option>
+                    <option value="false">No</option>
+                </select>
+    
+                <button type="submit" class="btn">Update Coupon</button>
+            </form>
+        </div>
+    </body>

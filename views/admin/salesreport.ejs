@@ -1,0 +1,579 @@
+<%- include("../../views/partials/admin/header") %>
+
+    <style>
+        .content-main {
+            position: absolute;
+            top: 70px;
+            left: 240px;
+            width: calc(100% - 240px);
+            padding: 2rem;
+        }
+
+        @media (max-width: 1000px) {
+            .content-main {
+                position: absolute;
+                top: 50px;
+                left: 20px;
+                width: calc(100% - 30px);
+                padding: 2rem;
+            }
+        }
+
+        .truncate {
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .truncate-tooltip {
+            position: relative;
+        }
+
+        .truncate-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: normal;
+            z-index: 100;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+
+        .page-item {
+            margin: 0 5px;
+        }
+
+        .page-link {
+            display: block;
+            padding: 8px 12px;
+            color: #007bff;
+            text-decoration: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .page-item.active .page-link {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+    <section class="content-main">
+        <div class="content-header">
+            <div>
+                <h2 class="content-title card-title"> Sales Report</h2>
+            </div>
+            <div class="download-buttons">
+                <button class="btn btn-primary" onclick="window.location.href='/admin/sales-report/download-sales-pdf?<%= new URLSearchParams(currentFilters).toString() %>'">Download PDF</button>
+   
+                 <button class="btn btn-primary" id="downloadExcel">Download Excel</button>
+
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Sales Report Filters</h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="report-type" class="form-label">Report Type</label>
+                                    <select id="filter-order" class="form-select">
+                                        <option value="custom">Default</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="start-date" class="form-label">Start Date</label>
+                                    <input type="date" id="start-date" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="end-date" class="form-label">End Date</label>
+                                    <input type="date" id="end-date" class="form-control">
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary w-100" id="filter-button">Filter</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Orders</h5>
+                            <h3 class="text-primary">
+                                <%= saleCount %>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Revenue</h5>
+                            <h3 class="text-success">₹ <%= totalSalesPrice %>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Total Discounts</h5>
+              <h3 class="text-warning">₹ 
+              </h3>
+            </div>
+          </div>
+        </div> -->
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Coupon Discount</h5>
+                            <h3 class="text-danger">
+                                <%= couponDiscount %>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Report Table -->
+            <div class="row mt-4">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Sales Report</h5>
+                        </div>
+                        <div class="card-body">
+                            <table id="salesTable" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>User</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Discount</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Payment Method</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (order.length> 0) { %>
+                                        <% order.forEach(order=> { %>
+                                            <% order.products.forEach(item=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= new Date(order.createdAt).toLocaleDateString() %>
+                                                    </td>
+                                                    <td class="truncate truncate-tooltip"
+                                                        data-tooltip="<%= order.userId ? order.userId.firstname : 'N/A' %>">
+                                                        <%= order.userId ? order.userId.firstname : 'N/A' %>
+                                                    </td>
+                                                    <td class="truncate truncate-tooltip"
+                                                        data-tooltip="<%= item.product?.name %>">
+                                                        <%= item.product?.name %>
+                                                    </td>
+                                                    <td>
+                                                        <%= item.quantity %>
+                                                    </td>
+                                                    <td>₹ <%= item.price %>
+                                                    </td>
+                                                    <td>₹ <%= item.discount || 0 %>
+                                                    </td>
+                                                    <td>₹ <%= item.price * item.quantity - (item.discount || 0) %>
+                                                    </td>
+                                                    <td>
+                                                        <%= order.orderStatus || "Pending" %>
+                                                    </td>
+                                                    <td>
+                                                        <%= order.paymentMethod %>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                                    <% }); %>
+                                                        <% } else { %>
+                                                            <tr>
+                                                                <td colspan="7" class="text-center">No orders found.
+                                                                </td>
+                                                            </tr>
+                                                            <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pagination-container">
+            <% if (totalPage> 1) { %>
+                <ul class="pagination">
+                    <% if (page> 1) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<%= page - 1 %>">&laquo; Previous</a>
+                        </li>
+                        <% } %>
+                            <% for (let i=1; i <=totalPage; i++) { %>
+                                <li class="page-item <%= i === page ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>">
+                                        <%= i %>
+                                    </a>
+                                </li>
+                                <% } %>
+                                    <% if (page < totalPage) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=<%= page + 1 %>">Next &raquo;</a>
+                                        </li>
+                                        <% } %>
+                </ul>
+                <% } %>
+        </div>
+    </section>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterButton = document.getElementById('filter-button');
+            const filterOrderSelect = document.getElementById('filter-order');
+            const startDateInput = document.getElementById('start-date');
+            const endDateInput = document.getElementById('end-date');
+
+            filterButton.addEventListener('click', function () {
+                const filterValue = filterOrderSelect.value;
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+
+                const params = new URLSearchParams({
+                    filtervalue: filterValue,
+                    startDate: startDate,
+                    endDate: endDate,
+                    page: 1 
+                });
+
+                
+                window.location.href = `/admin/salesreport?${params.toString()}`;
+            });
+
+            
+            function initializeFilters() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const filterValue = urlParams.get('filtervalue');
+                const startDate = urlParams.get('startDate');
+                const endDate = urlParams.get('endDate');
+
+                if (filterValue) {
+                    filterOrderSelect.value = filterValue;
+                }
+                if (startDate) {
+                    startDateInput.value = startDate;
+                }
+                if (endDate) {
+                    endDateInput.value = endDate;
+                }
+            }
+
+            initializeFilters();
+        });
+
+        document.getElementById('downloadPdf').addEventListener('click', function () {
+            
+            const filterValue = document.getElementById('filter-order').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+
+            
+            const params = new URLSearchParams({
+                filtervalue: filterValue,
+                startDate: startDate,
+                endDate: endDate
+            });
+
+            window.location.href = `/salesreport?${params.toString()}`;
+        });
+
+
+
+        // document.getElementById('downloadPdf').addEventListener('click', async () => {
+        //   const tableData = getSalesDataFromTable();
+        //   const response = await fetch('/admin/sales-report/pdf', {
+        //     method: 'POST',
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify({ salesData: tableData }),
+        //   });
+
+
+        //   const blob = await response.blob();
+        //   const link = document.createElement('a');
+        //   link.href = window.URL.createObjectURL(blob);
+        //   link.download = 'sales_report.pdf';
+        //   link.click();
+        // });
+
+        // document.getElementById('downloadExcel').addEventListener('click', async () => {
+        //   const tableData = getSalesDataFromTable();
+        //   const response = await fetch('/admin/sales-report/excel', {
+        //     method: 'POST',
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify({ salesData: tableData }),
+        //   });
+
+
+        //   const blob = await response.blob();
+        //   const link = document.createElement('a');
+        //   link.href = window.URL.createObjectURL(blob);
+        //   link.download = 'sales_report.xlsx';
+        //   link.click();
+        // });
+
+        // async function filterOrder() {
+        //     const filtervalue = document.getElementById('filter-order').value;
+        //     const startDate = document.getElementById('start-date').value;
+        //     const endDate = document.getElementById('end-date').value;
+        //     const page = 1; // Always start from first page when filtering
+
+        //     try {
+        //         const response = await fetch(`/admin/salesreport?filtervalue=${filtervalue}&startDate=${startDate}&endDate=${endDate}&page=${page}`, {
+        //             method: 'GET',
+        //             headers: {
+        //                 "Content-Type": "application/json"
+        //             }
+        //         });
+
+        //         const data = await response.json();
+
+        //         if (data.orders) {
+        //             const filterTable = document.querySelector("table tbody");
+        //             filterTable.innerHTML = "";
+        //             data.orders.forEach(order => {
+        //                 order.products.forEach(item => {
+        //                     const row = `
+        //                         <tr>
+        //                             <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+        //                             <td>${order.userId ? order.userId.firstname : 'N/A'}</td>
+        //                             <td>${item.product?.name}</td>
+        //                             <td>${item.quantity}</td>
+        //                             <td>₹ ${item.price}</td>
+        //                             <td>₹ ${item.discount || 0}</td>
+        //                             <td>₹ ${item.price * item.quantity - (item.discount || 0)}</td>
+        //                             <td>${order.orderStatus || "Pending"}</td>
+        //                             <td>${order.paymentMethod}</td>
+        //                         </tr>`;
+        //                     filterTable.insertAdjacentHTML("beforeend", row);
+        //                 });
+        //             });
+
+        //             document.querySelector('.text-primary').innerHTML = data.saleCount;
+        //             document.querySelector('.text-success').innerHTML = `₹ ${data.totalSalePrice}`;
+        //             document.querySelector('.text-danger').innerHTML = `₹ ${data.couponDiscount}`;
+
+        //             updatePagination(data.totalPage, page);
+        //         }
+        //     } catch (error) {
+        //         console.error('Error filtering orders:', error);
+        //     }
+        // }
+
+        // async function filterByDate() {
+        //     const startDate = document.getElementById('start-date').value;
+        //     const endDate = document.getElementById('end-date').value;
+        //     const page = 1; // Always start from first page when filtering
+
+        //     try {
+        //         const response = await fetch(`/admin/salesreport?startDate=${startDate}&endDate=${endDate}&page=${page}`, {
+        //             method: 'GET',
+        //             headers: {
+        //                 "Content-Type": "application/json"
+        //             }
+        //         });
+
+        //         const data = await response.json();
+
+        //         if (data.orders) {
+        //             const filterTable = document.querySelector("table tbody");
+        //             filterTable.innerHTML = "";
+        //             data.orders.forEach(order => {
+        //                 order.products.forEach(item => {
+        //                     const row = `
+        //                         <tr>
+        //                             <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+        //                             <td>${order.userId ? order.userId.firstname : 'N/A'}</td>
+        //                             <td>${item.product?.name}</td>
+        //                             <td>${item.quantity}</td>
+        //                             <td>₹ ${item.price}</td>
+        //                             <td>₹ ${item.discount || 0}</td>
+        //                             <td>₹ ${item.price * item.quantity - (item.discount || 0)}</td>
+        //                             <td>${order.orderStatus || "Pending"}</td>
+        //                             <td>${order.paymentMethod}</td>
+        //                         </tr>`;
+        //                     filterTable.insertAdjacentHTML("beforeend", row);
+        //                 });
+        //             });
+
+        //             document.querySelector('.text-primary').innerHTML = data.saleCount;
+        //             document.querySelector('.text-success').innerHTML = `₹ ${data.totalSalePrice}`;
+        //             document.querySelector('.text-danger').innerHTML = `₹ ${data.couponDiscount}`;
+
+        //             updatePagination(data.totalPage, page);
+        //         }
+        //     } catch (error) {
+        //         console.error('Error filtering orders:', error);
+        //     }
+        // }
+
+        // function updatePagination(totalPage, currentPage) {
+        //     const paginationContainer = document.querySelector('.pagination-container');
+        //     const pagination = document.createElement('ul');
+        //     pagination.className = 'pagination';
+
+        //     if (currentPage > 1) {
+        //         const prevPage = document.createElement('li');
+        //         prevPage.className = 'page-item';
+        //         prevPage.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">&laquo; Previous</a>`;
+        //         pagination.appendChild(prevPage);
+        //     }
+
+        //     for (let i = 1; i <= totalPage; i++) {
+        //         const pageItem = document.createElement('li');
+        //         pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        //         pageItem.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>`;
+        //         pagination.appendChild(pageItem);
+        //     }
+
+        //     if (currentPage < totalPage) {
+        //         const nextPage = document.createElement('li');
+        //         nextPage.className = 'page-item';
+        //         nextPage.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage + 1})">Next &raquo;</a>`;
+        //         pagination.appendChild(nextPage);
+        //     }
+
+        //     paginationContainer.innerHTML = '';
+        //     paginationContainer.appendChild(pagination);
+        // }
+
+        // async function goToPage(page) {
+        //     const filtervalue = document.getElementById('filter-order').value;
+        //     const startDate = document.getElementById('start-date').value;
+        //     const endDate = document.getElementById('end-date').value;
+
+        //     try {
+        //         const response = await fetch(`/admin/salesreport?page=${page}&filtervalue=${filtervalue}&startDate=${startDate}&endDate=${endDate}`, {
+        //             method: 'GET',
+        //             headers: {
+        //                 "Content-Type": "application/json"
+        //             }
+        //         });
+
+        //         const data = await response.json();
+
+        //         if (data.orders) {
+        //             const filterTable = document.querySelector("table tbody");
+        //             filterTable.innerHTML = "";
+        //             data.orders.forEach(order => {
+        //                 order.products.forEach(item => {
+        //                     const row = `
+        //                         <tr>
+        //                             <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+        //                             <td>${order.userId ? order.userId.firstname : 'N/A'}</td>
+        //                             <td>${item.product?.name}</td>
+        //                             <td>${item.quantity}</td>
+        //                             <td>₹ ${item.price}</td>
+        //                             <td>₹ ${item.discount || 0}</td>
+        //                             <td>₹ ${item.price * item.quantity - (item.discount || 0)}</td>
+        //                             <td>${order.orderStatus || "Pending"}</td>
+        //                             <td>${order.paymentMethod}</td>
+        //                         </tr>`;
+        //                     filterTable.insertAdjacentHTML("beforeend", row);
+        //                 });
+        //             });
+
+        //             document.querySelector('.text-primary').innerHTML = data.saleCount;
+        //             document.querySelector('.text-success').innerHTML = `₹ ${data.totalSalePrice}`;
+        //             document.querySelector('.text-danger').innerHTML = `₹ ${data.couponDiscount}`;
+
+        //             updatePagination(data.totalPage, page);
+        //         }
+        //     } catch (error) {
+        //         console.error('Error fetching page:', error);
+        //     }
+        // }
+
+        // function getSalesDataFromTable() {
+        //     const tableRows = document.querySelectorAll('#salesTable tbody tr');
+        //     const salesData = [];
+
+        //     tableRows.forEach((row) => {
+        //         const cells = row.querySelectorAll('td');
+        //         salesData.push({
+        //             date: cells[0].innerText,
+        //             product: cells[2].innerText,
+        //             userId: { name: cells[1].innerText },
+        //             totalAmount: Number(cells[4].innerText.slice(2)),
+        //             status: cells[7].innerText,
+        //         });
+        //     });
+
+        //     return salesData;
+        // }
+
+        //     async function prepareFilterOptions() {
+        //     const paymentMethods = await Order.distinct('paymentMethod');
+        //     const orderStatuses = await Order.distinct('orderStatus');
+        //     const users = await Order.aggregate([
+        //         { $group: { _id: '$userId', count: { $sum: 1 } } },
+        //         { $lookup: { 
+        //             from: 'users', 
+        //             localField: '_id', 
+        //             foreignField: '_id', 
+        //             as: 'userDetails' 
+        //         }},
+        //         { $unwind: '$userDetails' }
+        //     ]);
+
+        //     return {
+        //         paymentMethods,
+        //         orderStatuses,
+        //         users: users.map(u => ({
+        //             id: u._id,
+        //             name: u.userDetails.firstname,
+        //             orderCount: u.count
+        //         }))
+        //     };
+        // }
+
+    </script>
+    <%- include("../../views/partials/admin/footer") %>

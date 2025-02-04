@@ -41,7 +41,7 @@ const userSchema = new Schema({
     cart: {
         type: Array
     },
-    wallet: {
+    walletBalance: {
         type: Number,
         default: 0,
     },

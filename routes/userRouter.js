@@ -8,6 +8,7 @@ const addresController = require("../controllers/user/addressController");
 const cartController = require("../controllers/user/cartController")
 const orderController = require("../controllers/user/orderController");
 const wishlistController = require("../controllers/user/wishlistController");
+const walletController = require("../controllers/user/walletController")
 
 router.get("/pageNotFound", userController.pageNotFound)
 router.get("/", userController.loadHomepage)
@@ -57,7 +58,7 @@ router.get("/change-password",userAuth,userController.showChangePassword);
 router.post('/change-password',userAuth, userController.changePassword);
 
 // shop page
-router.get("/shop",userController.getShopPage)
+router.get("/shop", userController.getShopPage)
 
 // Cart Controller
 router.get("/cartPage",userAuth,cartController.getCartPage);
@@ -75,10 +76,21 @@ router.post("/place-order",userAuth,orderController.placeOrder)
 router.get("/orders",userAuth,orderController.getOrder)
 router.get('/order/:orderId', userAuth, orderController.getOrderDetails);
 router.post('/cancel-order/:orderId',userAuth,orderController.cancelOrder);
+router.post("/return-order/:orderId/:productId", userAuth, orderController.returnOrder);
+router.post('/verify-payment',userAuth,orderController.verifyPayment);
 
 // wishlist controller
 router.get("/wishlist",userAuth,wishlistController.getWishlistPage);
 router.post("/addToWishlist",userAuth,wishlistController.addToWishlist)
 router.delete("/wishlist/remove/:productId", userAuth, wishlistController.removeFromWishlist)
+
+
+// COUPON
+router.post("/applyCoupon",userAuth,cartController.applyCoupon);
+
+
+// Wallet Controller
+router.get('/wallet',userAuth,walletController.getWallet);
+
 
 module.exports = router;

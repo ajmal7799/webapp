@@ -7,7 +7,7 @@ const fs = require('fs')
 
 
 
-const getAddProductAppPage = async (req, res) => {
+const getAddProductAppPage = async (req, res) => { 
     try {
         const categories = await Category.find({ isListed: true });
 
@@ -20,7 +20,7 @@ const getAddProductAppPage = async (req, res) => {
 
 
 const addProduct = async (req, res) => {
-    console.log("Request body: ", req.body);
+    // console.log("Request body: ", req.body);
     try {
         const {
             productName,
@@ -93,7 +93,7 @@ const addProduct = async (req, res) => {
         });
 
         await product.save();
-        console.log("completed", product)
+        // console.log("completed", product)
         res.redirect("/admin/products");
 
     } catch (error) {
@@ -302,7 +302,76 @@ const updateProduct = async (req, res) => {
     }
 }
 
+const addProductOffer = async (req, res) => {
+    try {
+        const { productId, percentage } = req.body;
 
+        
+        const findProduct = await Product.findOne({ _id: productId });
+        if (!findProduct) {
+            return res.status(404).json({ status: false, message: "Product not found" });
+        }
+
+       
+        const findCategory = await Category.findOne({ _id: findProduct.category_id });
+
+        
+        if (!findCategory) {
+            return res.status(404).json({ status: false, message: "Category not found" });
+        }
+
+        if (findCategory.categoryOffer > percentage) {
+            return res.json({ status: false, message: "This product's category already has a higher offer" });
+        }
+
+        findProduct.regularPrice = findProduct.salePrice - Math.floor(findProduct.salePrice * (percentage / 100));
+        findProduct.productOffer = parseInt(percentage);
+        await findProduct.save();
+
+        
+        if (findCategory.categoryOffer > 0) {
+            findCategory.categoryOffer = 0;
+            await findCategory.save();
+        }
+
+        res.json({ status: true, message: "Product offer added successfully" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: "Internal server error" });
+    }
+};
+
+
+const removeProductOffer = async (req, res) => {
+    try {
+        const { productId } = req.body;
+
+        const findProduct = await Product.findOne({ _id: productId });
+
+        if (!findProduct) {
+            return res.status(404).json({ status: false, message: "Product not found" });
+        }
+
+  
+        const percentage = findProduct.productOffer;
+
+    
+        findProduct.regularPrice = findProduct.salePrice;  
+        findProduct.productOffer = 0; 
+
+        await findProduct.save();
+
+        res.json({ status: true, message: "Product offer removed successfully" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: "Internal server error" });
+    }
+};
+
+
+ 
 
 
 
@@ -317,5 +386,7 @@ module.exports = {
     unblockProduct,
     getEditProduct,
     updateProduct,
+    addProductOffer,
+    removeProductOffer
 
 };

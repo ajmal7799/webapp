@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const {v4:uuidv4}=require('uuid');
 
-
 const orderSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
@@ -30,7 +29,7 @@ const orderSchema = new Schema({
         },
         orderStatus: {
             type: String,
-            enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+            enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'],
             default: 'pending'
         },
     }],
@@ -65,6 +64,14 @@ const orderSchema = new Schema({
             required: true
         }
     },
+    subtotal: {
+        type: Number,
+        required: true
+    },
+    shippingCost: {
+        type: Number,
+        required: true
+    },
     totalAmount: {
         type: Number,
         required: true
@@ -73,9 +80,13 @@ const orderSchema = new Schema({
         type: Number,
         default: 0
     },
+    productdiscount:{
+        type:Number,
+        default:0
+    },
     paymentMethod: {
         type: String,
-        enum: ['cod', 'online', 'wallet'],
+        enum: ['cod', 'razorPay', 'online', 'wallet'],
         required: true
     },
     paymentStatus: {
@@ -83,15 +94,28 @@ const orderSchema = new Schema({
         enum: ['pending', 'completed', 'failed'],
         default: 'pending'
     },
+    paymentError: {
+        type: String,
+        default: null
+    },
     orderStatus: {
         type: String,
-        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'],
         default: 'pending'
     },
     couponApplied: {
         type: String
     },
     transactionId: {
+        type: String
+    },
+    razorpayPaymentId: {
+        type: String
+    },
+    razorpayOrderId: {
+        type: String
+    },
+    razorpaySignature: {
         type: String
     },
     createdAt: {

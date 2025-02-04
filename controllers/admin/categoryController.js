@@ -1,4 +1,5 @@
 const Category = require("../../models/categorySchema");
+const Product = require("../../models/productSchema")
 const categoryInfo = async (req, res) => {
     try {
 
@@ -137,6 +138,68 @@ const getUnlistCategory = async (req, res) => {
     }
 }
 
+const addCategoryOffer = async (req,res)=>{
+    try {
+
+        const percentage = parseInt(req.body.percentage)
+        const categoryId = req.body.categoryId;
+        const category = await Category.findById(categoryId);
+        
+        if(!category){
+            return res.status(404).json({status:false,message:"Category not found"});
+        }
+        const products = await Product.find({category_id:category._id});
+        
+
+        const hasProductOffer = products.some((product)=>product.productOffer > percentage);
+        if(hasProductOffer){
+            return res.json({status:false,message:"Product within this already have offers"})
+        }
+        await Category.updateOne({_id:categoryId},{$set:{categoryOffer:percentage}});
+
+        for(const product of products) {
+            product.productOffer = percentage;
+            product.regularPrice = Math.round(product.salePrice- (product.salePrice* (percentage/100)))
+            await product.save();
+        }
+        console.log(products)
+
+        res.json({status:true}) 
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message:"server error"});
+    }
+}
+
+const removeCategoryOffer = async (req,res)=>{
+    try {
+        const categoryId = req.body.categoryId;
+        const category = await Category.findById(categoryId);
+
+        if(!category){
+            return res.status(404).json({status:false,message:"Category not found"})
+        }
+
+        const percentage = category.categoryOffer;
+        const products = await Product.find({category_id:category._id})
+
+        if(products.length > 0) {
+            for(const product of products) {
+                product.regularPrice = product.salePrice;
+                product.productOffer = 0;
+                await product.save();
+            }
+        }
+
+        await Category.updateOne({_id:categoryId},{$set:{categoryOffer:0}})
+        res.json({status:true});
+        
+    } catch (error) {
+        res.status(500).json({status:false,message:"Internal server error"})
+    }
+}
+
 
 
 module.exports = {
@@ -146,7 +209,9 @@ module.exports = {
     editCategory,
     deleteCategory,
     getListCategory,
-    getUnlistCategory
+    getUnlistCategory,
+    addCategoryOffer,
+    removeCategoryOffer
 
 
 } 

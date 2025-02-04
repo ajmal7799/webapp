@@ -139,10 +139,10 @@
 
                         <div class="price-block">
                             <% if (product.salePrice> 0) { %>
-                                <span class="original-price">₹<%= product.regularPrice %></span>
-                                <span class="sale-price">₹<%= product.salePrice %></span>
+                                <span class="original-price">₹<%= product.salePrice %></span>
+                                <span class="sale-price">₹<%= product.regularPrice %></span>
                                 <% } else { %>
-                                    <span class="sale-price">₹<%= product.regularPrice %></span>
+                                    <span class="sale-price">₹<%= product.salePrice %></span>
                                     <% } %>
                         </div>
 

@@ -5,8 +5,11 @@ const customerController = require("../controllers/admin/customerController")
 const categoryController = require("../controllers/admin/categoryController");
 const productController = require("../controllers/admin/productController")
 const orderController = require("../controllers/admin/orderController")
+const couponController = require("../controllers/admin/couponController")
+const salesController = require("../controllers/admin/salesController")
 const {userAuth,adminAuth} = require("../middlewares/auth");
 const path = require('path');
+
 
 
 const uploadMiddleware = require('../middlewares/multerConfig');
@@ -86,12 +89,38 @@ router.post('/editProduct/:id',
     productController.updateProduct
 );
 
-
+// order management
 router.get('/order',adminAuth,orderController.getOrders)
 router.post('/update-order-status', adminAuth, orderController.updateOrderStatus);
 router.get('/order-details/:orderId', adminAuth, orderController.orderDetails);
 router.get('/orders',adminAuth,orderController.orderDetails)
 
 
+// coupon management
+router.get("/coupon",adminAuth,couponController.loadCouponPage);
+router.post("/addCoupon",adminAuth,couponController.addCoupon);
+router.get("/editCoupon",adminAuth,couponController.loadEditCoupon);
+router.post("/editCoupon",adminAuth,couponController.editCoupon);
+router.get("/deleteCoupon",adminAuth,couponController.deleteCoupon)
+
+
+// Category offer
+router.post("/addCategoryOffer",adminAuth,categoryController.addCategoryOffer);
+router.post("/removeCategoryOffer",adminAuth,categoryController.removeCategoryOffer);
+
+
+// Product offer
+router.post("/addProductOffer",adminAuth,productController.addProductOffer);
+router.post("/removeProductOffer",adminAuth,productController.removeProductOffer)
+
+
+// sales report
+router.get("/salesreport",adminAuth,salesController.loadSalesReport);
+
+router.get('/sales-report/download-sales-pdf', adminAuth,salesController.downloadSalesPDF);
+router.get('/api/download-excel', adminAuth,salesController.downloadExcel);
+
+// router.get("/filterOrder",adminAuth,salesController.filterOrder);
+// router.get("/filterbyOrder",adminAuth,salesController.filterbyDate)
 
 module.exports = router;

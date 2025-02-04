@@ -22,13 +22,17 @@ const productSchema = new mongoose.Schema({
         enum: ['English', 'Malayalam', 'Hindi', 'Tamil'],
         required: false,
     },
-    regularPrice: { 
+    regularPrice: {
         type: Number,
         required: true,
     },
     salePrice: {
-        type: Number, 
+        type: Number,
         default: 0,
+    },
+    productOffer: {
+        type: Number, 
+        default: 0
     },
     description: {
         type: String,

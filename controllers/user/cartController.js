@@ -3,11 +3,14 @@ const Cart = require("../../models/cartSchema");
 const mongoose = require('mongoose');
 const Address = require("../../models/addressSchema");
 const User = require("../../models/userSchema");
+const Order = require("../../models/orderSchema");
+const Coupon = require("../../models/couponSchema");
 
 const getCartPage = async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.user._id }).populate("books.product");
         const userData = await User.findOne({ _id: req.session.user._id });
+
         // console.log(userData,"hello")
         res.render("cart", { cart,user:userData });
     } catch (error) {
@@ -187,6 +190,8 @@ const getCheckoutPage = async (req, res) => {
         const userId = req.user._id;
         const cart = await Cart.findOne({ userId }).populate({ path: 'books.product', model: 'Product' });
         const addresses = await Address.find({ user_id: userId });
+        const coupon  = await Coupon.find({isList:true})
+        console.log(coupon)
 
         const userData = await User.findOne({_id:req.session.user._id});
 
@@ -196,6 +201,7 @@ const getCheckoutPage = async (req, res) => {
             addresses,
             title: 'Checkout',
             user:userData,
+            coupon:coupon,
         });
     } catch (error) {
         console.error('Checkout page error:', error);
@@ -203,6 +209,68 @@ const getCheckoutPage = async (req, res) => {
         res.redirect('/cart');
     }
 }
+
+const applyCoupon = async (req, res) => {
+    try {
+        const { couponCode, totalAmount } = req.body;
+        const userId = req.user._id;
+
+        const coupon = await Coupon.findOne({
+            name: couponCode,
+            isList: true,
+            createon: { $lte: new Date() },
+            expireOn: { $gte: new Date() }
+        });
+
+        if (!coupon) {
+            return res.json({ success: false, message: "Invalid or expired coupon" });
+        }
+
+        if (totalAmount < coupon.minimumPrice) {
+            return res.json({
+                success: false,
+                message: `Minimum purchase amount of ₹${coupon.minimumPrice} required`
+            });
+        }
+
+        const usageCount = await Order.countDocuments({
+            'couponApplied': couponCode
+        });
+
+        if (usageCount >= coupon.UsageLimit) {
+            return res.json({
+                success: false,
+                message: 'Coupon usage limit exceeded'
+            });
+        }
+
+     
+        let discountAmount = 0;
+        if (coupon.isPercentage) {
+            discountAmount = (totalAmount * coupon.offerPrice) / 100;
+            if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
+                discountAmount = coupon.maxDiscount;
+            }
+        } else {
+            discountAmount = coupon.offerPrice;
+        }
+
+        const discountedAmount = totalAmount - discountAmount;
+
+        res.json({
+            success: true,
+            coupon,
+            originalAmount: totalAmount,
+            discountAmount,
+            discountedAmount,
+            message: 'Coupon applied successfully'
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
 
 
 const addAddress = async (req, res) => {
@@ -259,7 +327,8 @@ module.exports = {
     updateCartQuantity,
     getCheckoutPage,
     addAddress,
-    deleteAddress
+    deleteAddress,
+    applyCoupon
 };
 
 

@@ -205,9 +205,8 @@
                 justify-content: space-between;
                 align-items: center;
                 gap: 20px;
-                /* Space between search form and dropdown */
                 width: 100%;
-                /* Adjusts layout within the header */
+               
             }
 
             .search-form {
@@ -242,6 +241,10 @@
                 font-size: 14px;
 
             }
+            .a{
+                right: 55px;
+                
+            }
         </style>
     </head>
 
@@ -256,121 +259,146 @@
                                 value="<%= searchQuery || '' %>">
                             <button class="btn btn-primary" type="submit">Search</button>
                         </div>
+                        <div class="sort-dropdown">
+                            <select name="sort" class="form-control" onchange="this.form.submit()">
+                                <option value="select">Select one</option>
+                                <option value="newest" <%=sort==='newest' ? 'selected' : '' %>>New Arrivals</option>
+                                <option value="price-low" <%=sort==='price-low' ? 'selected' : '' %>>Price Low to High
+                                </option>
+                                <option value="price-high" <%=sort==='price-high' ? 'selected' : '' %>>Price High to Low
+                                </option>
+                                <option value="name-asc" <%=sort==='name-asc' ? 'selected' : '' %>>Name A to Z</option>
+                                <option value="name-desc" <%=sort==='name-desc' ? 'selected' : '' %>>Name Z to A</option>
+                                <option value="featured" <%=sort==='featured' ? 'selected' : '' %>>Featured</option>
+                            </select>
+                        </div>
                     </form>
-                    <div class="sort-dropdown">
-                        <select name="sort" class="form-control" onchange="this.form.submit()">
-                            <option value="select">Select one</option>
-                            <option value="newest" <%=sort==='newest' ? 'selected' : '' %>>New Arrivals</option>
-                            <option value="price-low" <%=sort==='price-low' ? 'selected' : '' %>>Price Low to High
-                            </option>
-                            <option value="price-high" <%=sort==='price-high' ? 'selected' : '' %>>Price High to Low
-                            </option>
-                            <option value="name-asc" <%=sort==='name-asc' ? 'selected' : '' %>>Name A to Z</option>
-                            <option value="name-desc" <%=sort==='name-desc' ? 'selected' : '' %>>Name Z to A</option>
-                            <option value="featured" <%=sort==='featured' ? 'selected' : '' %>>Featured</option>
-                        </select>
-                    </div>
                 </div>
             </header>
 
-            <div class="card-body">
-                <form action="/shop" method="GET" id="categoryFilterForm">
-                    <input type="hidden" name="sort" value="<%= sort || 'newest' %>">
-                    <input type="hidden" name="search" value="<%= searchQuery || '' %>">
-
-                    <% categories.forEach(function(category) { %>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="categories"
-                                value="<%= category._id %>" id="category-<%= category._id %>"
-                                <%=selectedCategories.includes(category._id.toString()) ? 'checked' : '' %>
-                            onchange="this.form.submit()">
-                            <label class="form-check-label" for="category-<%= category._id %>">
-                                <%= category.name %> (<%= category.count %>)
-                            </label>
+            <div class="row">
+                <!-- Category Filter Sidebar -->
+                <div class="col-lg-3 order-lg-1 ">
+                    <div class="card category-filter a">
+                        <div class="card-header">
+                            <h5 class="mb-0">Categories</h5>
                         </div>
-                        <% }); %>
-                </form>
-            </div>
-
-
-            <main>
-                <div class="row product__filter">
-                    <% if(products && products.length> 0) { %>
-                        <% products.forEach(function(product) { %>
-                            <div class="col-lg-3 col-md-4 col-12 col-sm-6">
-                                <div class="product-cart-wrap mb-30">
-                                    <div class="product-img-action-wrap">
-                                        <div class="product-img product-img-zoom">
-                                            <a href="/productDetails?id=<%= product._id %>">
-                                                <img class="default-img" src="<%= product.productImages[0] %>"
-                                                    alt="<%= product.name %>">
-                                            </a>
-                                        </div>
-                                        <a href="/addToWishlist" class="wishlist-btn"
-                                            onclick="event.preventDefault(); addToWishlist('<%= product._id %>')">
-                                            <i class="fas fa-heart"></i>
-                                        </a>
+                        <div class="card-body ">
+                            <form action="/shop" method="GET">
+                                <input type="hidden" name="sort" value="<%= sort || 'newest' %>">
+                                <input type="hidden" name="search" value="<%= searchQuery || '' %>">
+                                
+                                <% categories.forEach(function(category) { %>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="categories" 
+                                               value="<%= category._id %>"
+                                               id="category-<%= category._id %>"
+                                               <%= selectedCategories && selectedCategories.includes(category._id.toString()) ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="category-<%= category._id %>">
+                                            <%= category.name %> (<%= category.count %>)
+                                        </label>
                                     </div>
-
-                                    <div class="product-content-wrap">
-                                        <h6>
-                                            <%= product.name %>
-                                        </h6>
-                                        <h5>₹<%= product.regularPrice %>
-                                        </h5>
-                                        <button onclick="addToCart('<%= product._id %>')"
-                                            class="btn btn-sm btn-outline-primary">
-                                            Add to cart
-                                        </button>
+                                <% }); %>
+        
+                                <!-- Price Range Filter -->
+                                <div class="mt-4">
+                                    <h6>Price Range</h6>
+                                    <div class="price-range-inputs">
+                                        <input type="number" name="minPrice" class="form-control mb-2" 
+                                               placeholder="Min Price" value="<%= minPrice || '' %>">
+                                        <input type="number" name="maxPrice" class="form-control mb-3" 
+                                               placeholder="Max Price" value="<%= maxPrice || '' %>">
                                     </div>
                                 </div>
-                            </div>
-                            <% }); %>
-                                <% } else { %>
-                                    <div class="col-12">
-                                        <p class="text-center">No products available</p>
-                                    </div>
-                                    <% } %>
+        
+                                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Pagination Controls -->
-                <% if (totalPages> 1) { %>
-                    <div class="pagination justify-content-center mt-4">
-                        <nav aria-label="Product navigation">
-                            <ul class="pagination">
-                                <% if (hasPreviousPage) { %>
-                                    <li class="page-item">
-                                        <a class="page-link"
-                                            href="/shop?page=<%= previousPage %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>"
-                                            aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                    <% } %>
-
-                                        <% for(let i=1; i <=totalPages; i++) { %>
-                                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                <div class="col-lg-9 order-lg-2">
+                    <main>
+                        <div class="row product__filter">
+                            <% if(products && products.length> 0) { %>
+                                <% products.forEach(function(product) { %>
+                                    <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+                                        <div class="product-cart-wrap mb-30">
+                                            <div class="product-img-action-wrap">
+                                                <div class="product-img product-img-zoom">
+                                                    <a href="/productDetails?id=<%= product._id %>">
+                                                        <img class="default-img" src="<%= product.productImages[0] %>"
+                                                            alt="<%= product.name %>">
+                                                    </a>
+                                                </div>
+                                                <a href="/addToWishlist" class="wishlist-btn"
+                                                    onclick="event.preventDefault(); addToWishlist('<%= product._id %>')">
+                                                    <i class="fas fa-heart"></i>
+                                                </a>
+                                            </div>
+    
+                                            <div class="product-content-wrap">
+                                                <h6>
+                                                    <%= product.name %>
+                                                </h6>
+                                                <h5>₹<%= product.regularPrice %>
+                                                </h5>
+                                                <button onclick="addToCart('<%= product._id %>')"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    Add to cart
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <div class="col-12">
+                                                <p class="text-center">No products available</p>
+                                            </div>
+                                            <% } %>
+                        </div>
+    
+                        <!-- Pagination Controls -->
+                        <% if (totalPages> 1) { %>
+                            <div class="pagination justify-content-center mt-4">
+                                <nav aria-label="Product navigation">
+                                    <ul class="pagination">
+                                        <% if (hasPreviousPage) { %>
+                                            <li class="page-item">
                                                 <a class="page-link"
-                                                    href="/shop?page=<%= i %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>">
-                                                    <%= i %>
+                                                    href="/shop?page=<%= previousPage %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>"
+                                                    aria-label="Previous">
+                                                    <span aria-hidden="true">&laquo;</span>
                                                 </a>
                                             </li>
                                             <% } %>
-
-                                                <% if (hasNextPage) { %>
-                                                    <li class="page-item">
+    
+                                                <% for(let i=1; i <=totalPages; i++) { %>
+                                                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
                                                         <a class="page-link"
-                                                            href="/shop?page=<%= nextPage %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>"
-                                                            aria-label="Next">
-                                                            <span aria-hidden="true">&raquo;</span>
+                                                            href="/shop?page=<%= i %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>">
+                                                            <%= i %>
                                                         </a>
                                                     </li>
                                                     <% } %>
-                            </ul>
-                        </nav>
-                    </div>
-                    <% } %>
-            </main>
+    
+                                                        <% if (hasNextPage) { %>
+                                                            <li class="page-item">
+                                                                <a class="page-link"
+                                                                    href="/shop?page=<%= nextPage %>&search=<%= searchQuery || '' %>&sort=<%= sort || 'newest' %>"
+                                                                    aria-label="Next">
+                                                                    <span aria-hidden="true">&raquo;</span>
+                                                                </a>
+                                                            </li>
+                                                            <% } %>
+                                    </ul>
+                                </nav>
+                            </div>
+                            <% } %>
+                    </main>
+                </div>
+            </div>
         </div>
     </body>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -488,16 +516,6 @@
     </body>
 
     </html>
-
-
-
-
-
-
-
-
-
-
 
 
     <%- include('../partials/user/footer') %>

@@ -10,9 +10,9 @@
                 <div class="col-lg-8">
                     <% let subtotal=0; %>
                         <% cart.books.forEach(bookItem=> { %>
-                            <% subtotal +=bookItem.product.salePrice * bookItem.availableQuantity; %>
+                            <% subtotal +=bookItem.product.regularPrice * bookItem.availableQuantity; %>
                                 <div class="card mb-3 cart-item" id="cart-item-<%= bookItem.product._id %>"
-                                    data-price="<%= bookItem.product.salePrice %>"
+                                    data-price="<%= bookItem.product.regularPrice %>"
                                     data-quantity="<%= bookItem.availableQuantity %>">
                                     <div class="card-body">
                                         <div class="row align-items-center">
@@ -72,16 +72,16 @@
                                             <!-- Price -->
                                             <div class="col-md-2 text-center">
                                                 <% if (bookItem.product.salePrice < bookItem.product.regularPrice) { %>
-                                                    <p class="mb-0 text-success">₹<%= bookItem.product.salePrice %>
+                                                    <p class="mb-0 text-success">₹<%= bookItem.product.regularPrice %>
                                                     </p>
                                                     <small class="text-muted text-decoration-line-through">₹<%=
-                                                            bookItem.product.regularPrice %></small>
+                                                            bookItem.product.salePrice %></small>
                                                     <% } else { %>
                                                         <p class="mb-0">₹<%= bookItem.product.regularPrice %>
                                                         </p>
                                                         <% } %>
                                                             <small class="text-muted">
-                                                                Total: ₹<%= bookItem.product.salePrice *
+                                                                Total: ₹<%= bookItem.product.regularPrice *
                                                                     bookItem.availableQuantity %>
                                                             </small>
                                             </div>

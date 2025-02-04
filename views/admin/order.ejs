@@ -83,6 +83,54 @@
                                         <% }); %>
                                 </tbody>
                             </table>
+
+                            <% if (pagination.totalPages > 1) { %>
+                        <nav aria-label="Orders pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <!-- First Page -->
+                                <li class="page-item <%= pagination.page === 1 ? 'disabled' : '' %>">
+                                    <a class="page-link" href="?page=1" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                
+                                <!-- Previous Page -->
+                                <li class="page-item <%= !pagination.hasPrevPage ? 'disabled' : '' %>">
+                                    <a class="page-link" href="?page=<%= pagination.prevPage %>" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                <% for(let i = Math.max(1, pagination.page - 2); i <= Math.min(pagination.totalPages, pagination.page + 2); i++) { %>
+                                    <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+                                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+
+                                <!-- Next Page -->
+                                <li class="page-item <%= !pagination.hasNextPage ? 'disabled' : '' %>">
+                                    <a class="page-link" href="?page=<%= pagination.nextPage %>" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+
+                                <!-- Last Page -->
+                                <li class="page-item <%= pagination.page === pagination.lastPage ? 'disabled' : '' %>">
+                                    <a class="page-link" href="?page=<%= pagination.lastPage %>" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Page <%= pagination.page %> of <%= pagination.totalPages %>
+                                </small>
+                            </div>
+                        </nav>
+                        <% } %>
+
+
                         </div>
                     </div>
                 </div>

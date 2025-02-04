@@ -1,6 +1,6 @@
 <%- include("../../views/partials/admin/header") %>
 
-link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
 <div class="container mt-4">
     <br>
@@ -50,16 +50,26 @@ link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.
                     <div class="border p-3">
                         <p class="d-flex justify-content-between">
                             <span>Subtotal:</span>
-                            <span>₹<%= order.totalAmount.toFixed(2) %></span>
+                            <span>₹<%= order.subtotal.toFixed(2) %></span>
                         </p>
                         <p class="d-flex justify-content-between">
                             <span>Shipping:</span>
-                            <span>₹40.00</span>
+                            <span>₹<%= order.shippingCost.toFixed(2) %></span>
                         </p>
+                        <p class="d-flex justify-content-between">
+                            <span>Discount:</span>
+                            <span>₹<%= order.discount.toFixed(2) %></span>
+                        </p>
+                        <% if (order.couponApplied) { %>
+                            <p class="d-flex justify-content-between">
+                                <span>Coupon Applied:</span>
+                                <span><%= order.couponApplied %></span>
+                            </p>
+                        <% } %>
                         <hr>
                         <h5 class="d-flex justify-content-between">
                             <span>Total:</span>
-                            <span>₹<%= (order.totalAmount + 40).toFixed(2) %></span>
+                            <span>₹<%= order.totalAmount.toFixed(2) %></span>
                         </h5>
                     </div>
                 </div>

@@ -46,7 +46,11 @@
                     <div class="border p-3">
                         <p class="d-flex justify-content-between">
                             <span>Subtotal:</span>
-                            <span>₹<%= order.totalAmount.toFixed(2) %></span>
+                            <span>₹<%= (order.totalAmount + order.discount).toFixed(2) %></span>
+                        </p>
+                        <p class="d-flex justify-content-between">
+                            <span>Discount:</span>
+                            <span>₹<%= order.discount.toFixed(2) %></span>
                         </p>
                         <p class="d-flex justify-content-between">
                             <span>Shipping:</span>
@@ -55,7 +59,7 @@
                         <hr>
                         <h5 class="d-flex justify-content-between">
                             <span>Total:</span>
-                            <span>₹<%= (order.totalAmount + 40).toFixed(2) %></span>
+                            <span>₹<%= order.totalAmount %></span>
                         </h5>
                     </div>
                 </div>

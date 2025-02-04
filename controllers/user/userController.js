@@ -1,6 +1,5 @@
-// const { render } = require("../..");
 const User = require("../../models/userSchema")
-const Category = require("../../models/productSchema")
+const Category = require("../../models/categorySchema")
 const Product = require("../../models/productSchema")
 const nodemailer = require("nodemailer")
 const env = require("dotenv").config();
@@ -144,7 +143,7 @@ const signup = async (req, res) => {
         const emailSent = await sendVerificationEmail(email, otp)
 
         if (!emailSent) {
-            return res.json("email-error")
+            return res.render("signup", { message: "Failed to send verification email. Please try again." });
         }
 
         req.session.userOtp = otp;
@@ -155,10 +154,8 @@ const signup = async (req, res) => {
         console.log("OTP Sent ", otp)
 
     } catch (error) {
-
-        console.error("sign error ", error)
-        res.redirect("/pageNotFound")
-
+        console.error("Signup error:", error);
+        res.render("signup", { message: "An error occurred during signup. Please try again." });
     }
 }
 
@@ -178,7 +175,7 @@ const securePassword = async (password) => {
 
 const verifyOtp = async (req, res) => {
     try {
-        const { otp } = req.body
+        const { otp } = req.body;
         if (otp === req.session.userOtp) {
             const user = req.session.userData;
             const passwordHash = await securePassword(user.password);
@@ -189,26 +186,19 @@ const verifyOtp = async (req, res) => {
                 email: user.email,
                 phone: user.phone,
                 password: passwordHash,
-
-            })
+            });
             await saveUserData.save();
 
             req.session.user = saveUserData._id;
-            res.json({ success: true, redirectUrl: "/login" })
-            // res.redirect('/login')
-
+            res.json({ success: true, redirectUrl: "/login" });
         } else {
-            res.status(400).json({ success: false, message: "Invalid OTP Please try again" })
-
+            res.status(400).json({ success: false, message: "Invalid OTP Please try again" });
         }
     } catch (error) {
-
-        console.error("error verifying OTP", error)
-        res.status(500).json({ success: false, message: "An error occured" })
-
-
+        console.error("error verifying OTP", error);
+        res.status(500).json({ success: false, message: "An error occurred" });
     }
-}
+};
 
 
 const resendOtp = async (req, res) => {
@@ -277,6 +267,11 @@ const login = async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, findUser.password);
         console.log("pass:", passwordMatch)
         if (!passwordMatch) return res.render("login", { message: "Incorrect Password" });
+
+        // Handle online payment method errors
+        if (findUser.paymentMethod === 'online' && findUser.paymentStatus === 'failed') {
+            return res.render("login", { message: "Previous online payment failed. Please try again." });
+        }
 
         req.session.regenerate((err) => {
             if (err) {
@@ -607,7 +602,7 @@ const changePassword = async (req, res) => {
     }
 }
 
-const  getShopPage = async (req, res) => {
+const getShopPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 6;
@@ -616,22 +611,41 @@ const  getShopPage = async (req, res) => {
         const searchQuery = req.query.search ? req.query.search.trim() : '';
         const sortOption = req.query.sort || 'newest';
         
-        // Get selected category from query
-        const selectedCategory = req.query.category || '';
+        // Get category filters
+        const selectedCategories = Array.isArray(req.query.categories) 
+            ? req.query.categories.map(id => new mongoose.Types.ObjectId(id))
+            : req.query.categories 
+                ? [new mongoose.Types.ObjectId(req.query.categories)]
+                : [];
+
+        // Get price range filters
+        const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+        const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
         // Build match conditions
-        let matchConditions = { isBlocked: false };
+        const matchConditions = { isBlocked: false };
 
-        // Add search conditions if search query exists
+        // Add search query
         if (searchQuery) {
-            matchConditions.name = { $regex: searchQuery, $options: 'i' };
+            matchConditions.$or = [
+                { name: { $regex: searchQuery, $options: 'i' } },
+                { 'category.name': { $regex: searchQuery, $options: 'i' } }
+            ];
         }
 
-        // Add category filter if category is selected
-        if (selectedCategory) {
-            matchConditions.category_id = selectedCategory;
+        // Add category filter
+        if (selectedCategories.length > 0) {
+            matchConditions.category_id = { $in: selectedCategories };
         }
 
+        // Add price range filter
+        if (minPrice !== null || maxPrice !== null) {
+            matchConditions.regularPrice = {};
+            if (minPrice !== null) matchConditions.regularPrice.$gte = minPrice;
+            if (maxPrice !== null) matchConditions.regularPrice.$lte = maxPrice;
+        }
+
+        // Determine sort stage
         let sortStage = { $sort: { createdOn: -1 } };
         switch (sortOption) {
             case 'price-low':
@@ -656,8 +670,34 @@ const  getShopPage = async (req, res) => {
                 break;
         }
 
-        // Get all active categories
-        const categories = await Category.find({ isBlocked: false });
+        // Get categories with product counts
+        const categories = await Category.aggregate([
+            { $match: { isListed: true } },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "category_id",
+                    pipeline: [
+                        { 
+                            $match: {
+                                isBlocked: false,
+                                ...(minPrice !== null && { regularPrice: { $gte: minPrice } }),
+                                ...(maxPrice !== null && { regularPrice: { $lte: maxPrice } })
+                            }
+                        }
+                    ],
+                    as: "products"
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    count: { $size: "$products" }
+                }
+            }
+        ]);
 
         const productPipeline = [
             { $match: matchConditions },
@@ -675,6 +715,18 @@ const  getShopPage = async (req, res) => {
             { $limit: limit }
         ];
 
+        // Get price range for the filters
+        const priceRange = await Product.aggregate([
+            { $match: { isBlocked: false } },
+            {
+                $group: {
+                    _id: null,
+                    minPrice: { $min: "$regularPrice" },
+                    maxPrice: { $max: "$regularPrice" }
+                }
+            }
+        ]);
+
         const [productData, totalProductsCount] = await Promise.all([
             Product.aggregate(productPipeline),
             Product.countDocuments(matchConditions)
@@ -691,7 +743,9 @@ const  getShopPage = async (req, res) => {
             user: userData,
             products: productData,
             categories: categories,
-            selectedCategory: selectedCategory,
+            selectedCategories: selectedCategories.map(id => id.toString()),
+            minPrice: minPrice || (priceRange[0]?.minPrice || 0),
+            maxPrice: maxPrice || (priceRange[0]?.maxPrice || 0),
             currentPage: page,
             totalPages: totalPages,
             hasNextPage: page < totalPages,
@@ -708,7 +762,9 @@ const  getShopPage = async (req, res) => {
             user: null,
             products: [],
             categories: [],
-            selectedCategory: '',
+            selectedCategories: [],
+            minPrice: 0,
+            maxPrice: 0,
             currentPage: 1,
             totalPages: 0,
             searchQuery: '',
@@ -717,7 +773,6 @@ const  getShopPage = async (req, res) => {
         });
     }
 };
-
 module.exports = {
     loadHomepage,
     pageNotFound,
@@ -742,4 +797,4 @@ module.exports = {
     changePassword,
     getShopPage,
     
-} 
+}
