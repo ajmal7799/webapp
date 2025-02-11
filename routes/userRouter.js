@@ -78,6 +78,11 @@ router.get('/order/:orderId', userAuth, orderController.getOrderDetails);
 router.post('/cancel-order/:orderId',userAuth,orderController.cancelOrder);
 router.post("/return-order/:orderId/:productId", userAuth, orderController.returnOrder);
 router.post('/verify-payment',userAuth,orderController.verifyPayment);
+router.post('/update-payment-status', userAuth, orderController.updatePaymentStatus);
+router.post('/initiateRepayment', userAuth, orderController.initiateRepayment);
+
+// download invoice 
+router.get('/orders/:orderId/invoice',userAuth,orderController.downloadInvoice);
 
 // wishlist controller
 router.get("/wishlist",userAuth,wishlistController.getWishlistPage);
@@ -87,6 +92,7 @@ router.delete("/wishlist/remove/:productId", userAuth, wishlistController.remove
 
 // COUPON
 router.post("/applyCoupon",userAuth,cartController.applyCoupon);
+
 
 
 // Wallet Controller

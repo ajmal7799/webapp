@@ -694,11 +694,11 @@
               <div class="product-cart-wrap mb-30">
                 <div class="product-img-action-wrap">
                   <div class="product-img product-img-zoom">
-                    <a href="/productDetails?id=<%=products[i]._id%>">                      
+                    <a href="/productDetails?id=<%=products[i]._id%>">
                       <img class="default-img" src="<%=products[i].productImages[0]%>" alt="<%=products[i].name%>">
                     </a>
                   </div>
-                  <a href="/addToWishlist?id=<%=products[i]._id%>" class="wishlist-btn">
+                  <a href="javascript:void(0);" onclick="addToWishlist('<%= products[i]._id %>')" class="wishlist-btn">
                     <i class="fas fa-heart"></i>
                   </a>
                 </div>
@@ -710,7 +710,7 @@
                   <h5>₹
                     <%=products[i].regularPrice%>
                   </h5>
-                  <a href="addToCart?id=<%=products[i]._id%>">Add to cart</a>
+                  <a href="javascript:void(0);" onclick="addToCart('<%= products[i]._id %>')">Add to cart</a>
                 </div>
               </div>
             </div>
@@ -724,4 +724,114 @@
       </div>
     </div>
   </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+
+    function addToCart(productId) {
+      fetch('/addToCart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: productId })
+      })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Failed to add to cart');
+          }
+        })
+        .then(data => {
+          console.log('Product added to cart:', data);
+      
+          Swal.fire({
+            title: 'Added to Cart!',
+            text: 'Would you like to view your cart?',
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#7066e0',
+            confirmButtonText: 'Go to Cart',
+            cancelButtonText: 'Continue Shopping'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/cartPage';
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error adding to cart:', error);
+         
+          Swal.fire({
+            title: 'Oops!',
+            text: 'Could not add the product to the cart.',
+            icon: 'error',
+            confirmButtonColor: '#3085d6'
+          });
+        });
+    }
+
+    function addToWishlist(productId) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: true,
+        // showCancelButton: true,
+        confirmButtonText: 'Go To Wishlist',
+        // cancelButtonText: 'Continue Shopping',
+        confirmButtonColor: '#3085d6',
+        // cancelButtonColor: '#7066e0',
+        timer: 4000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      fetch('/addToWishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: productId })
+      })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Failed to add to wishlist')
+          }
+        })
+        .then(data => {
+          console.log(data, "data")
+          Toast.fire({
+            icon: 'success',
+            title: 'Added to Wishlist!',
+            text: 'Would you like to view your wishlist?'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/wishlist';
+            }
+          });
+        })
+        .catch(error => {
+          console.log(error, "errorrrr")
+          Toast.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Could not add the product to the wishlist.'
+          });
+        });
+    }
+
+
+
+
+
+  </script>
+
   <%- include('../partials/user/footer') %>

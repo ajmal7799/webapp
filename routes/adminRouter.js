@@ -6,7 +6,8 @@ const categoryController = require("../controllers/admin/categoryController");
 const productController = require("../controllers/admin/productController")
 const orderController = require("../controllers/admin/orderController")
 const couponController = require("../controllers/admin/couponController")
-const salesController = require("../controllers/admin/salesController")
+const salesController = require("../controllers/admin/salesController");
+const dashboardController = require("../controllers/admin/dashboardController");
 const {userAuth,adminAuth} = require("../middlewares/auth");
 const path = require('path');
 
@@ -101,7 +102,7 @@ router.get("/coupon",adminAuth,couponController.loadCouponPage);
 router.post("/addCoupon",adminAuth,couponController.addCoupon);
 router.get("/editCoupon",adminAuth,couponController.loadEditCoupon);
 router.post("/editCoupon",adminAuth,couponController.editCoupon);
-router.get("/deleteCoupon",adminAuth,couponController.deleteCoupon)
+router.delete("/deleteCoupon", adminAuth, couponController.deleteCoupon);
 
 
 // Category offer
@@ -118,9 +119,11 @@ router.post("/removeProductOffer",adminAuth,productController.removeProductOffer
 router.get("/salesreport",adminAuth,salesController.loadSalesReport);
 
 router.get('/sales-report/download-sales-pdf', adminAuth,salesController.downloadSalesPDF);
-router.get('/api/download-excel', adminAuth,salesController.downloadExcel);
+router.post('/sales-report/excel',adminAuth,salesController.downloadExcel)
 
-// router.get("/filterOrder",adminAuth,salesController.filterOrder);
-// router.get("/filterbyOrder",adminAuth,salesController.filterbyDate)
+
+// router.get('/dashboard',adminAuth,dashboardController.loadDashboard);  
+// router.get('/filterData', adminAuth, dashboardController.filterData);
+
 
 module.exports = router;

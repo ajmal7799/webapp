@@ -199,172 +199,232 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% coupon.forEach((coupon)=>{ 
+                        <% coupon.forEach((coupon)=>{
                             // Format dates to DD-MM-YYYY
                             const formatDate = (date) => {
-                                const d = new Date(date);
-                                const day = String(d.getDate()).padStart(2, '0');
-                                const month = String(d.getMonth() + 1).padStart(2, '0');
-                                const year = d.getFullYear();
-                                return `${day}-${month}-${year}`;
+                            const d = new Date(date);
+                            const day = String(d.getDate()).padStart(2, '0');
+                            const month = String(d.getMonth() + 1).padStart(2, '0');
+                            const year = d.getFullYear();
+                            return `${day}-${month}-${year}`;
                             };
-                        %>
+                            %>
                             <tr>
-                                <td><%= coupon.name %></td>
-                                <td>₹<%= coupon.offerPrice.toFixed(2) %></td>
-                                <td><%= formatDate(coupon.createon) %></td>
-                                <td><%= formatDate(coupon.expireOn) %></td>
-                                <td>₹<%= coupon.minimumPrice.toFixed(2) %></td>
-                                <td><%= coupon.UsageLimit %></td>
+                                <td>
+                                    <%= coupon.name %>
+                                </td>
+                                <td>₹<%= coupon.offerPrice.toFixed(2) %>
+                                </td>
+                                <td>
+                                    <%= formatDate(coupon.createon) %>
+                                </td>
+                                <td>
+                                    <%= formatDate(coupon.expireOn) %>
+                                </td>
+                                <td>₹<%= coupon.minimumPrice.toFixed(2) %>
+                                </td>
+                                <td>
+                                    <%= coupon.UsageLimit %>
+                                </td>
                                 <td>
                                     <% if(coupon.isList) { %>
                                         <span class="badge bg-success">Active</span>
-                                    <% } else { %>
-                                        <span class="badge bg-danger">Inactive</span>
-                                    <% } %>
+                                        <% } else { %>
+                                            <span class="badge bg-danger">Inactive</span>
+                                            <% } %>
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="/admin/editCoupon?id=<%= coupon._id %>" class="btn btn-sm btn-primary">Edit</a>
-                                        <a href="/admin/deleteCoupon?id=<%= coupon._id %>" 
-                                           class="btn btn-sm btn-danger ms-2" 
-                                           onclick="return confirm('Are you sure you want to delete this coupon?')">
+                                        <a href="/admin/editCoupon?id=<%= coupon._id %>"
+                                            class="btn btn-sm btn-primary">Edit</a>
+                                        <a href="#" class="btn btn-sm btn-danger ms-2 deleteCouponBtn"
+                                            data-id="<%= coupon._id %>">
                                             Delete
                                         </a>
                                     </div>
                                 </td>
                             </tr>
-                        <% }) %>
+                            <% }) %>
                     </tbody>
                 </table>
             </div>
         </div>
         <script>
 
-document.getElementById('add-coupon-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
+            document.getElementById('add-coupon-form').addEventListener('submit', async function (e) {
+                e.preventDefault();
 
-    const formData = new FormData(this);
-    
-    // Get the dates from form
-    const createonDate = new Date(formData.get('createon'));
-    const expireDate = new Date(formData.get('expireOn'));
+                const formData = new FormData(this);
 
-    // Add leading zeros to dates and months
-    const formatDate = (date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-    };
+                // Get the dates from form
+                const createonDate = new Date(formData.get('createon'));
+                const expireDate = new Date(formData.get('expireOn'));
 
-    // Format the dates
-    const formattedCreateon = formatDate(createonDate);
-    const formattedExpireOn = formatDate(expireDate);
+                // Add leading zeros to dates and months
+                const formatDate = (date) => {
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${day}-${month}-${year}`;
+                };
 
-    // Create a new FormData object with formatted dates
-    const updatedFormData = new FormData();
-    for (let [key, value] of formData.entries()) {
-        if (key === 'createon') {
-            updatedFormData.append(key, formattedCreateon);
-        } else if (key === 'expireOn') {
-            updatedFormData.append(key, formattedExpireOn);
-        } else {
-            updatedFormData.append(key, value);
-        }
-    }
+                // Format the dates
+                const formattedCreateon = formatDate(createonDate);
+                const formattedExpireOn = formatDate(expireDate);
 
-    try {
-        // Log the data being sent for debugging
-        console.log('Sending dates:', {
-            createon: formattedCreateon,
-            expireOn: formattedExpireOn
-        });
+                // Create a new FormData object with formatted dates
+                const updatedFormData = new FormData();
+                for (let [key, value] of formData.entries()) {
+                    if (key === 'createon') {
+                        updatedFormData.append(key, formattedCreateon);
+                    } else if (key === 'expireOn') {
+                        updatedFormData.append(key, formattedExpireOn);
+                    } else {
+                        updatedFormData.append(key, value);
+                    }
+                }
 
-        const response = await fetch('/admin/addCoupon', {
-            method: 'POST',
-            body: new URLSearchParams(updatedFormData),
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-        });
-
-        // Log the response for debugging
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Response data:', data);
-
-        if (response.ok && data.status) {
-            await Swal.fire({
-                title: 'Success!',
-                text: data.message || 'Coupon has been added successfully',
-                icon: 'success',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#28a745'
-            });
-
-            window.location.href = '/admin/coupon';
-        } else {
-            throw new Error(data.message || 'Failed to add coupon');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        Swal.fire({
-            title: 'Error!',
-            text: error.message || 'Failed to add the coupon. Please try again.',
-            icon: 'error',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#dc3545'
-        });
-    }
-});
-            document.querySelectorAll('.btn-delete').forEach(button => {
-                button.addEventListener('click', async function (e) {
-                    e.preventDefault();
-
-                    // Show confirmation dialog
-                    const result = await Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#dc3545',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Yes, delete it!',
-                        cancelButtonText: 'Cancel'
+                try {
+                    // Log the data being sent for debugging
+                    console.log('Sending dates:', {
+                        createon: formattedCreateon,
+                        expireOn: formattedExpireOn
                     });
 
-                    // If user confirms deletion
-                    if (result.isConfirmed) {
-                        try {
-                            const response = await fetch(this.href);
+                    const response = await fetch('/admin/addCoupon', {
+                        method: 'POST',
+                        body: new URLSearchParams(updatedFormData),
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                    });
 
-                            if (response.ok) {
-                                // Show success message
-                                await Swal.fire({
-                                    title: 'Deleted!',
-                                    text: 'Coupon has been deleted successfully.',
-                                    icon: 'success',
-                                    confirmButtonColor: '#28a745'
-                                });
+                    // Log the response for debugging
+                    console.log('Response status:', response.status);
+                    const data = await response.json();
+                    console.log('Response data:', data);
 
-                                // Reload the page to update the coupon list
-                                window.location.reload();
-                            } else {
-                                throw new Error('Failed to delete coupon');
-                            }
-                        } catch (error) {
-                            // Show error message
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'Failed to delete the coupon. Please try again.',
-                                icon: 'error',
-                                confirmButtonColor: '#dc3545'
-                            });
-                        }
+                    if (response.ok && data.status) {
+                        await Swal.fire({
+                            title: 'Success!',
+                            text: data.message || 'Coupon has been added successfully',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#28a745'
+                        });
+
+                        window.location.href = '/admin/coupon';
+                    } else {
+                        throw new Error(data.message || 'Failed to add coupon');
                     }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'Failed to add the coupon. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            });
+            // document.querySelectorAll('.btn-delete').forEach(button => {
+            //     button.addEventListener('click', async function (e) {
+            //         e.preventDefault();
+
+            //         // Show confirmation dialog
+            //         const result = await Swal.fire({
+            //             title: 'Are you sure?',
+            //             text: "You won't be able to revert this!",
+            //             icon: 'warning',
+            //             showCancelButton: true,
+            //             confirmButtonColor: '#dc3545',
+            //             cancelButtonColor: '#6c757d',
+            //             confirmButtonText: 'Yes, delete it!',
+            //             cancelButtonText: 'Cancel'
+            //         });
+
+            //         // If user confirms deletion
+            //         if (result.isConfirmed) {
+            //             try {
+            //                 const response = await fetch(this.href);
+
+            //                 if (response.ok) {
+            //                     // Show success message
+            //                     await Swal.fire({
+            //                         title: 'Deleted!',
+            //                         text: 'Coupon has been deleted successfully.',
+            //                         icon: 'success',
+            //                         confirmButtonColor: '#28a745'
+            //                     });
+
+            //                     // Reload the page to update the coupon list
+            //                     window.location.reload();
+            //                 } else {
+            //                     throw new Error('Failed to delete coupon');
+            //                 }
+            //             } catch (error) {
+            //                 // Show error message
+            //                 Swal.fire({
+            //                     title: 'Error!',
+            //                     text: 'Failed to delete the coupon. Please try again.',
+            //                     icon: 'error',
+            //                     confirmButtonColor: '#dc3545'
+            //                 });
+            //             }
+            //         }
+            //     });
+            // });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll(".deleteCouponBtn").forEach(button => {
+                    button.addEventListener("click", function (event) {
+                        event.preventDefault(); // Prevent default link action
+
+                        const couponId = this.getAttribute("data-id");
+
+                        Swal.fire({
+                            title: "Are you sure?",
+                            text: "This coupon will be permanently deleted!",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#d33",
+                            cancelButtonColor: "#3085d6",
+                            confirmButtonText: "Yes, delete it!"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                fetch(`/admin/deleteCoupon?id=${couponId}`, {
+                                    method: "DELETE"
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            Swal.fire({
+                                                icon: "success",
+                                                title: "Deleted!",
+                                                text: "Coupon has been deleted.",
+                                                showConfirmButton: false,
+                                                timer: 1500
+                                            }).then(() => {
+                                                window.location.reload(); // Refresh the page
+                                            });
+                                        } else {
+                                            throw new Error(data.message || "Deletion failed");
+                                        }
+                                    })
+                                    .catch(error => {
+                                        Swal.fire({
+                                            icon: "error",
+                                            title: "Error!",
+                                            text: error.message || "Server error, try again later."
+                                        });
+                                    });
+                            }
+                        });
+                    });
                 });
             });
+
 
 
         </script>

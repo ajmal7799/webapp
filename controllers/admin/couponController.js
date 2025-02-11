@@ -27,6 +27,17 @@ const addCoupon = async (req, res) => {
             isList
         } = req.body;
 
+        const couponCode = code.trim();
+
+        const existingCoupon = await Coupon.findOne({name:{$regex:`^${couponCode}$`,$options:'i'}})
+
+        if(existingCoupon){
+            return res.status(400).json({
+                status:false,
+                message:"Coupon code already exists. Please use a different code"
+            })
+        }
+
     
         
 
@@ -48,14 +59,18 @@ const addCoupon = async (req, res) => {
             });
         }
 
-        
-        // console.log('Parsed dates:', {
-        //     createdDate,
-        //     expiryDate
-        // });
+        if(createdDate>= expiryDate){
+            return res.status(400).json({
+                status:false,
+                message:"creation date must be before expiry date"
+            })
+        }
+
+  
+     
 
         const coupon = new Coupon({
-            name: code,
+            name:couponCode,
             offerPrice: offerPrice,
             createon: createdDate,
             expireOn: expiryDate,
@@ -122,7 +137,12 @@ const deleteCoupon = async(req,res)=>{
     try {
         const couponId = req.query.id;
         const coupon = await Coupon.findByIdAndDelete({_id:couponId});
-        res.redirect("/admin/coupon")
+        if (!coupon) {
+            return res.status(404).json({ success: false, message: "Coupon not found" });
+        }
+
+        res.json({ success: true, message: "Coupon deleted successfully" });
+        
         
     } catch (error) {
         console.error(error)

@@ -201,7 +201,7 @@ const getEditProduct = async (req, res) => {
     }
 }
 
-// Update Product
+
 const updateProduct = async (req, res) => {
     try {
         const productId = req.params.id;

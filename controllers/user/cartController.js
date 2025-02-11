@@ -5,6 +5,7 @@ const Address = require("../../models/addressSchema");
 const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
 const Coupon = require("../../models/couponSchema");
+const Wallet = require("../../models/walletSchema");
 
 const getCartPage = async (req, res) => {
     try {
@@ -190,19 +191,59 @@ const getCheckoutPage = async (req, res) => {
         const userId = req.user._id;
         const cart = await Cart.findOne({ userId }).populate({ path: 'books.product', model: 'Product' });
         const addresses = await Address.find({ user_id: userId });
-        const coupon  = await Coupon.find({isList:true})
-        console.log(coupon)
+        const currentDate = new Date();
+        const coupon = await Coupon.find({
+            expireOn: { $gt: currentDate },
+            isList:true,  
+            $or: [
+                { UsageLimit: { $gt: 0 } },
+                { UsageLimit: { $exists: false } },
+                {isList:false}
+            ]
+            }); 
+ 
+
+        // console.log(coupon)
+    
 
         const userData = await User.findOne({_id:req.session.user._id});
 
 
-        res.render('checkout', {
-            cart,
-            addresses,
-            title: 'Checkout',
-            user:userData,
-            coupon:coupon,
-        });
+
+       const wallets = await Wallet.find({userId})
+       
+       const sumofcredit = wallets.reduce((sum,element)=>{
+         if(element.type === "Credit"){
+            return sum + element.amount
+         }
+         return sum
+       },0)
+
+       const sumofdebit = wallets.reduce((sum, element) => {
+        if (element.type === "Debit") {
+            return sum + element.amount;
+        }
+        return sum;
+    }, 0);
+
+
+        const totalBalanceAmount = sumofcredit - sumofdebit;
+
+        console.log("wallet",totalBalanceAmount)
+
+
+
+                
+
+            res.render('checkout', {
+                cart,
+                addresses,
+                title: 'Checkout',
+                user:userData,
+                coupon:coupon,
+                totalBalanceAmount:totalBalanceAmount
+
+            });
     } catch (error) {
         console.error('Checkout page error:', error);
         req.flash('error', 'Error loading checkout page');

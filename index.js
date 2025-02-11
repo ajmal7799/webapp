@@ -38,6 +38,7 @@ app.use(passport.session());
 
 
 
+
 // View engine setup
 app.set("view engine", "ejs")
 app.set("views", [path.join(__dirname, "views/user"), path.join(__dirname, "views/admin")])
@@ -47,7 +48,7 @@ app.use(express.static(path.join(__dirname, "public")))
 // Routes
 app.use("/", userRouter)
 app.use("/admin", adminRouter);  
-
+// app.use('/', dashboardRoutes);
 
 // const razorpay = new Razorpay({
 //     key_id: process.env.RAZORPAY_KEY_ID,    

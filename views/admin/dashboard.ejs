@@ -1,18 +1,136 @@
-<%- include("../../views/partials/admin/header") %>
-<!-- <section class="content-main">
-    <div class="content-header">
-        <div>
-            <h2 class="content-title card-title">Dashboard sdf </h2>
-        </div>
-        
-       
+<%- include("../partials/admin/header") %>
+
+<!-- Tailwind CSS CDN -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container mx-auto px-4 py-8 mt-16">
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-gray-500 text-sm font-medium">Total Revenue</h3>
+      <p class="text-2xl font-bold">
+        ₹<%= typeof totalRevenue === 'number' ? totalRevenue.toLocaleString() : "0" %>
+      </p>
     </div>
-</section> -->
-<section class="content-main">
-    <div class="content-header">
-        <div>
-            <h2 class="content-title card-title">Dashboard</h2>
-        </div>
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-gray-500 text-sm font-medium">Total Sales</h3>
+      <p class="text-2xl font-bold">
+        <%= typeof salesData === 'number' ? salesData.toLocaleString() : "0" %>
+      </p>
     </div>
-</section>
-<%- include("../../views/partials/admin/footer") %>
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-gray-500 text-sm font-medium">Cancelled Orders</h3>
+      <p class="text-2xl font-bold"><%= typeof cancelledCount !== 'undefined' ? cancelledCount : "0" %></p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-gray-500 text-sm font-medium">New Users</h3>
+      <p class="text-2xl font-bold">
+        <%= typeof newUsersCount === 'number' ? newUsersCount.toLocaleString() : "0" %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Top Products Chart -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-4">Top Products</h3>
+      <canvas id="topProductsChart"></canvas>
+    </div>
+
+    <!-- Top Categories Chart -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-4">Top Categories</h3>
+      <canvas id="topCategoriesChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Additional Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+ 
+    <!-- New Users Chart -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-4">New Users (Last 4 Days)</h3>
+      <canvas id="newUsersChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script>
+  // Top Products Chart
+  const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+  const topProductsChart = new Chart(topProductsCtx, {
+    type: 'bar',
+    data: {
+      labels: '<%= JSON.stringify(productData.map(p => p.productName)) %>',
+      datasets: [{
+        label: 'Orders',
+        data: '<%= JSON.stringify(productData.map(p => p.totalOrder)) %>',
+        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // Top Categories Chart
+  const topCategoriesCtx = document.getElementById('topCategoriesChart').getContext('2d');
+  const topCategoriesChart = new Chart(topCategoriesCtx, {
+    type: 'doughnut',
+    data: {
+      labels: '<%= JSON.stringify(categoryData.map(c => c.categoryName)) %>',
+      datasets: [{
+        label: 'Orders',
+        data: '<%= JSON.stringify(categoryData.map(c => c.totalOrder)) %>',
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.5)',
+          'rgba(54, 162, 235, 0.5)',
+          'rgba(255, 206, 86, 0.5)',
+          'rgba(75, 192, 192, 0.5)'
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)'
+        ],
+        borderWidth: 1
+      }]
+    }
+  });
+
+  // New Users Chart
+  const newUsersCtx = document.getElementById('newUsersChart').getContext('2d');
+  const newUsersChart = new Chart(newUsersCtx, {
+    type: 'line',
+    data: {
+      labels: '<%= JSON.stringify(userData.map(u => new Date(u.date).toLocaleDateString())) %>',
+      datasets: [{
+        label: 'New Users',
+        data: '<%= JSON.stringify(userData.map(u => u.count)) %>',
+        backgroundColor: 'rgba(255, 159, 64, 0.5)',
+        borderColor: 'rgba(255, 159, 64, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+
+<%- include("../partials/admin/footer") %>

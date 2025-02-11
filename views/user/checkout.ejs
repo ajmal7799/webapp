@@ -1,6 +1,32 @@
 <%- include('../partials/user/header') %>
 
     <head>
+        <style>
+            .coupon-item {
+                border: 1px solid #ddd;
+                padding: 15px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .coupon-conditions {
+                display: flex;
+                flex-direction: column;
+                font-size: 0.8em;
+                color: #666;
+            }
+
+            .coupon-details {
+                flex-grow: 1;
+            }
+
+            .apply-coupon-btn {
+                margin-left: 15px;
+            }
+        </style>
 
     </head>
     <div class="container mt-4">
@@ -134,9 +160,9 @@
                                 <path
                                     d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
                                 <path
-                                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
                             </svg>
-                            </button>
+                        </button>
 
                     </div>
                     <div class="card-body">
@@ -147,12 +173,71 @@
                                 <input type="text" class="form-control" id="couponCode" placeholder="Enter coupon code">
                                 <button type="button" class="btn btn-primary" onclick="applyCoupon()">Apply</button>
                             </form>
+                            <br>
+                            <div class="coupon-section">
+                                <button type="button" class="btn btn-light" data-toggle="modal"
+                                    data-target="#couponModal">
+                                    See Coupons
+                                </button>
+                                <div id="applied-coupon-display" class="mt-2" style="margin-left: 30px;"></div>
+                            </div>
 
-                            <!-- View Available Coupons Button -->
+                            <!-- Coupon Modal -->
+                            <div class="modal fade" id="couponModal" tabindex="-1" role="dialog"
+                                aria-labelledby="couponModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="couponModalLabel">Available Coupons</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <% if (coupon && coupon.length> 0) { %>
+                                                <div class="coupon-list">
+                                                    <% coupon.forEach(function(coupon) { %>
+                                                        <div class="coupon-item" data-coupon-code="<%= coupon.name %>"
+                                                            data-discount="<%= coupon.offerPrice %>">
+                                                            <div class="coupon-details">
+                                                                <h6>
+                                                                    <%= coupon.name %>
+                                                                </h6>
+                                                                <span class="badge badge-primary"
+                                                                    style="color: #1a1a1a; padding-left: 0px;">
+                                                                    <%= coupon.offerPrice %> ₹OFF
+                                                                </span>
+                                                                <div class="coupon-conditions">
+                                                                    <small>Min. Purchase: ₹<%= coupon.minimumPrice %>
+                                                                    </small>
+                                                                    <small>Valid Until: <%=
+                                                                            coupon.expireOn.toLocaleDateString() %>
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                        <% }); %>
+                                                </div>
+                                                <% } else { %>
+                                                    <div class="alert alert-info text-center">
+                                                        No coupons available at the moment.
+                                                    </div>
+                                                    <% } %>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
 
-                            <!-- Coupon Result/Message Area -->
+
+
                             <div id="couponResult" class="mt-3">
+
                                 <!-- Applied coupon details will show here -->
                             </div>
                         </div>
@@ -183,11 +268,15 @@
 
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="paymentMethod" id="walletPayment"
-                                        value="wallet" >
+                                        value="wallet" data-balance="<%= totalBalanceAmount %>">
                                     <label class="form-check-label" for="walletPayment">
                                         Wallet Payment
                                     </label>
                                 </div>
+                                <div id="walletBalanceDisplay" class="mt-2" style="display: none;">
+                                    Available Balance: ₹<span id="walletBalance">0</span>
+                                </div>
+
                             </div>
                         </form>
                     </div>
@@ -257,7 +346,39 @@
 
     <script>
 
-       
+        document.addEventListener('DOMContentLoaded', function () {
+            const walletPaymentRadio = document.getElementById('walletPayment');
+            const walletBalanceDisplay = document.getElementById('walletBalanceDisplay');
+            const walletBalanceSpan = document.getElementById('walletBalance');
+
+            // Function to format number with commas
+            function formatNumber(num) {
+                return num.toLocaleString('en-IN', {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2
+                });
+            }
+
+            // Listen for changes on all radio buttons
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.value === 'wallet') {
+                        // Show the wallet balance display
+                        walletBalanceDisplay.style.display = 'block';
+                        // Get the balance from the data attribute
+                        const totalBalanceAmount = parseFloat(walletPaymentRadio.dataset.balance);
+                        walletBalanceSpan.textContent = formatNumber(totalBalanceAmount);
+                    } else {
+                        // Hide the wallet balance display for other payment methods
+                        walletBalanceDisplay.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+
+
+
 
         let appliedCoupon = null;
         function handlePlaceOrder() {
@@ -296,14 +417,14 @@
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                credentials: 'same-origin',
+                credentials: 'include',
                 body: JSON.stringify(orderData)
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.orderId) {
                         if (orderData.paymentMethod === 'wallet') {
-                            // Handle COD Orders
+
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Order Placed!',
@@ -325,18 +446,15 @@
                                     window.location.href = `/order/${data.orderId}`;
                                 }
                             });
-
-
-
-
-                        } else if (data.razorpay) {
+                        }
+                        else if (data.razorpay) {
 
                             const options = {
                                 key: data.razorpay.keyId,
                                 amount: data.razorpay.amount,
                                 currency: data.razorpay.currency,
                                 order_id: data.razorpay.orderId,
-                                name: 'Your Store Name',
+                                name: 'WordSphere Bookstore',
                                 description: 'Order Payment',
                                 handler: function (response) {
                                     Swal.fire({
@@ -374,7 +492,13 @@
                                                     }
                                                 });
                                             } else {
-                                                throw new Error(verificationData.message || 'Payment verification failed');
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Payment Failed',
+                                                    text: verificationData.message || 'Your payment could not be verified.'
+                                                });
+                                                // Pass data to handlePaymentFailure
+                                                handlePaymentFailure(verificationData.message || 'Payment verification failed', data.orderId);
                                             }
                                         })
                                         .catch(error => {
@@ -384,6 +508,8 @@
                                                 title: 'Payment Failed',
                                                 text: 'There was an error processing your payment'
                                             });
+                                            // Pass data to handlePaymentFailure
+                                            handlePaymentFailure('There was an error processing your payment', data.orderId);
                                         });
                                 },
                                 prefill: {
@@ -397,21 +523,15 @@
                                 modal: {
                                     ondismiss: function () {
                                         Swal.fire({
-                                            icon: 'warning',
-                                            title: 'Payment Cancelled',
-                                            text: 'Your payment was cancelled. Would you like to try again?',
-                                            showCancelButton: true,
-                                            confirmButtonText: 'Try Again',
-                                            cancelButtonText: 'Cancel'
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                try {
-                                                    const rzp = new Razorpay(options);
-                                                    rzp.open();
-                                                } catch (error) {
-                                                    console.error('Razorpay retry failed:', error);
-                                                }
-                                            }
+                                            icon: 'error',
+                                            title: 'Payment Failed',
+                                            text: 'Your payment could not be completed. Please try again later.',
+                                            confirmButtonText: 'OK'
+                                        }).then(() => {
+
+                                            console.log('Payment failed and user acknowledged.');
+                                            // Pass data to handlePaymentFailure
+                                            handlePaymentFailure('Your payment could not be completed. Please try again later.', data.orderId);
                                         });
                                     }
                                 }
@@ -427,10 +547,17 @@
                                     title: 'Payment Failed',
                                     text: 'Unable to initialize payment gateway'
                                 });
+                                // Pass data to handlePaymentFailure
+                                handlePaymentFailure('Unable to initialize payment gateway', data.orderId);
                             }
                         }
                     } else {
-                        throw new Error(data.message || 'Order placement failed');
+                        Swal.fire({
+                            icon: "error",
+                            title: 'payment method error',
+                            text: data.message || 'An error occurred while processing your payment'
+                        })
+
                     }
                 })
                 .catch(error => {
@@ -439,6 +566,61 @@
                         icon: 'error',
                         title: 'Order Failed',
                         text: 'Unable to place order. Please try again.'
+                    });
+                });
+        }
+
+        function handlePaymentFailure(errorMessage, orderId) {
+            fetch('/update-payment-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    orderId: orderId,
+                    status: 'failed',
+                    error: errorMessage
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Failed',
+                            text: errorMessage,
+                            confirmButtonText: 'View Orders',
+                            showCancelButton: true,
+                            cancelButtonText: 'Try Again'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/orders';
+                            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                handlePlaceOrder();
+                            }
+                        });
+                    } else {
+                        console.error('Error updating payment status:', data.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Failed',
+                            text: errorMessage,
+                            confirmButtonText: 'View Orders'
+                        }).then(() => {
+                            window.location.href = '/orders';
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating payment status:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Failed',
+                        text: errorMessage,
+                        confirmButtonText: 'View Orders'
+                    }).then(() => {
+                        window.location.href = '/orders';
                     });
                 });
         }
@@ -531,16 +713,16 @@
         });
 
         document.getElementById('removecoupon').addEventListener('click', function () {
-        Swal.fire({
-            title: "Coupon Removed!",
-            text: "The coupon has been removed successfully.",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false
-        }).then(() => {
-            window.location.reload();
+            Swal.fire({
+                title: "Coupon Removed!",
+                text: "The coupon has been removed successfully.",
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.reload();
+            });
         });
-    });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

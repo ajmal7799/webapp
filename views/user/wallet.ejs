@@ -1,267 +1,159 @@
 <%- include('../partials/user/header') %>
 
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
-    /* Reset and base styles */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
     body {
-        overflow-x: hidden;
-        width: 100%;
-        position: relative;
+        background-color: #f8f9fa;
+        font-family: 'Inter', sans-serif;
     }
 
-    /* Main container styles */
-    .main-container {
-        width: 100%;
-        max-width: 100vw;
-        overflow-x: hidden;
+    .wallet-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 30px;
     }
 
-    .content-wrapper {
-        width: 100%;
-        padding: 0 15px;
-    }
-
-    .wallet-history {
-        background: #f8f9fa;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        padding: 20px;
-        margin: 20px 0;  /* Changed from margin: 20px */
-        border: 1px solid #e9ecef;
-        width: 100%;
-    }
-    
-    .table-responsive-wrapper {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin-bottom: 15px;
-    }
-    
     .wallet-header {
-        color: #343a40;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .wallet-title {
+        font-size: 28px;
         font-weight: 700;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #dee2e6;
-        position: relative;
-        font-size: clamp(1.25rem, 2vw, 1.75rem);
+        color: #2d3748;
     }
-    
-    .wallet-header::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        width: 60px;
-        height: 2px;
-        background: #6c5ce7;
+
+    .wallet-balance {
+        font-size: 24px;
+        font-weight: 600;
+        color: #38a169;
     }
-    
-    .table {
-        border-collapse: separate;
-        border-spacing: 0;
+
+    .transaction-table {
         width: 100%;
-        min-width: 800px;
-        border-radius: 10px;
-        background: white;
-        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0 10px;
     }
-    
-    .table thead th {
-        background: #6c5ce7 !important;
-        color: white;
+
+    .transaction-table th {
+        background-color: #f1f3f5;
+        color: #4a5568;
         font-weight: 600;
         text-transform: uppercase;
-        font-size: clamp(0.8rem, 1.5vw, 0.9rem);
         padding: 15px;
-        letter-spacing: 0.5px;
-        white-space: nowrap;
+        font-size: 14px;
     }
-    
-    .table tbody tr {
-        transition: all 0.3s ease;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .table tbody tr:hover {
-        background-color: #f0f2ff;
-    }
-    
-    .table td {
+
+    .transaction-table td {
+        background-color: #ffffff;
         padding: 15px;
-        vertical-align: middle;
-        font-size: clamp(0.875rem, 1.5vw, 1rem);
-        color: #495057;
+        font-size: 16px;
+        border-top: 1px solid #e2e8f0;
     }
-    
+
+    .transaction-table tr:hover td {
+        background-color: #f8f9fa;
+        transition: background-color 0.3s ease;
+    }
+
     .badge {
         padding: 8px 12px;
-        border-radius: 6px;
-        font-weight: 500;
-        font-size: 0.85em;
-        letter-spacing: 0.5px;
-        white-space: nowrap;
-    }
-    
-    .bg-success {
-        background-color: #00b894 !important;
-        color: white;
-    }
-    
-    .bg-danger {
-        background-color: #ff7675 !important;
-        color: white;
-    }
-    
-    tfoot tr {
-        background-color: #f8f9fa;
+        border-radius: 20px;
         font-weight: 600;
+        font-size: 12px;
     }
-    
-    tfoot th {
-        padding: 15px;
-        font-size: clamp(1rem, 1.5vw, 1.1rem);
-        color: #343a40;
+
+    .badge-credit {
+        background-color: #c6f6d5;
+        color: #2f855a;
+    }
+
+    .badge-debit {
+        background-color: #fed7d7;
+        color: #9b2c2c;
     }
 
     .amount-credit {
-        color: #00b894;
+        color: #38a169;
         font-weight: 600;
     }
 
     .amount-debit {
-        color: #ff7675;
+        color: #e53e3e;
         font-weight: 600;
     }
 
-    /* Responsive styles */
     @media (max-width: 768px) {
-        .wallet-history {
-            padding: 15px;
-            margin: 10px 0;
+        .wallet-container {
+            margin: 20px;
+            padding: 20px;
         }
 
-        .content-wrapper {
-            padding: 0 10px;
+        .wallet-title {
+            font-size: 24px;
         }
-        
-        .table td, .table th {
+
+        .wallet-balance {
+            font-size: 20px;
+        }
+
+        .transaction-table th,
+        .transaction-table td {
             padding: 10px;
+            font-size: 14px;
         }
-        
-        .badge {
-            padding: 6px 8px;
-            font-size: 0.75em;
-        }
-        
-        .table td:nth-child(3) {
-            max-width: 150px;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-            hyphens: auto;
-        }
-
-        /* Fix for mobile menu */
-        .col-md-2.menu {
-            display: none;
-        }
-
-        .col-md-10 {
-            width: 100%;
-            padding: 0;
-        }
-    }
-
-    /* Custom scrollbar */
-    .table-responsive-wrapper::-webkit-scrollbar {
-        height: 8px;
-    }
-
-    .table-responsive-wrapper::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 4px;
-    }
-
-    .table-responsive-wrapper::-webkit-scrollbar-thumb {
-        background: #6c5ce7;
-        border-radius: 4px;
-    }
-
-    .table-responsive-wrapper::-webkit-scrollbar-thumb:hover {
-        background: #5849c4;
     }
 </style>
 
-<div class="main-container">
-    <div class="row g-0">
-        <div class="col-md-2 menu">
-        </div>
+<div class="wallet-container">
+    <div class="wallet-header">
+        <h2 class="wallet-title">Wallet History</h2>
+        <div class="wallet-balance">Balance: ₹ <%= Math.round(balanceAmount) %></div>
+    </div>
 
-        <div class="col-md-10">
-            <div class="content-wrapper" style="margin-left:-109px;">
-                <div class="wallet-history" style="margin-top: 81px;">
-                    <h2 class="wallet-header">Wallet History</h2>
-                    <div class="table-responsive-wrapper">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Date</th>
-                                    <th>Description</th>
-                                    <th>Type</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% let totalBalance = 0; %>
-                                <% wallets.forEach((element, index) => { 
-                                    totalBalance += element.type === "Credit" ? element.amount : -element.amount; 
-                                %>
-                                <tr>
-                                    <td><%= index + 1 %></td>
-                                    <td><%= element.formattedCreatedAt %></td>
-                                    <td><%= element.description %></td> <!-- Fixed typo here -->
-                                    <td>
-                                        <span class="badge badge-debit <% if (element.type == "Credit") { %>
-                                                    bg-success
-                                                <% } else { %>
-                                                    bg-danger
-                                                <% } %>">
-                                            <%= element.type %>
-                                        </span>
-                                    </td>
-                                    <td class="<%= element.type == 'Credit' ? 'amount-credit' : 'amount-debit' %>">
-                                        ₹ <%= element.type == 'Credit' ? '' : '-' %><%= element.amount %>
-                                    </td>
-                                </tr>
-                                <% }) %>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="4" class="text-end">Total Balance:</th>
-                                    <th class="<%= balanceAmount >= 0 ? 'amount-credit' : 'amount-debit' %>">
-                                        ₹ <%= Math.round(balanceAmount) %>
-                                    </th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="table-responsive">
+        <table class="transaction-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% wallets.forEach((element, index) => { %>
+                <tr>
+                    <td><%= index + 1 %></td>
+                    <td><%= element.formattedCreatedAt %></td>
+                    <td><%= element.description %></td>
+                    <td>
+                        <span class="badge <%= element.type === 'Credit' ? 'badge-credit' : 'badge-debit' %>">
+                            <%= element.type %>
+                        </span>
+                    </td>
+                    <td class="<%= element.type === 'Credit' ? 'amount-credit' : 'amount-debit' %>">
+                        ₹ <%= element.type === 'Credit' ? '' : '-' %><%= element.amount %>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <%- include('../partials/user/footer') %>

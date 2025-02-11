@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const {v4:uuidv4}=require('uuid');
+const { v4: uuidv4 } = require('uuid');
 
 const orderSchema = new Schema({
     userId: {
@@ -8,10 +8,10 @@ const orderSchema = new Schema({
         ref: "User",
         required: true
     },
-    orderId:{
-        type:String,
-        default:()=>uuidv4(),
-        unique:true
+    orderId: {
+        type: String,
+        default: () => uuidv4(),
+        unique: true
     },
     products: [{
         product: {
@@ -80,9 +80,9 @@ const orderSchema = new Schema({
         type: Number,
         default: 0
     },
-    productdiscount:{
-        type:Number,
-        default:0
+    productdiscount: {
+        type: Number,
+        default: 0
     },
     paymentMethod: {
         type: String,
@@ -91,7 +91,7 @@ const orderSchema = new Schema({
     },
     paymentStatus: {
         type: String,
-        enum: ['pending', 'completed', 'failed'],
+        enum: ['pending', 'completed', 'failed','cancelled'],
         default: 'pending'
     },
     paymentError: {
@@ -122,8 +122,8 @@ const orderSchema = new Schema({
         type: Date,
         default: Date.now
     }
-}, { 
-    timestamps: true 
+}, {
+    timestamps: true
 });
 
 const Order = mongoose.model('Order', orderSchema);

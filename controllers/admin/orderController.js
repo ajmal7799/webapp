@@ -5,13 +5,10 @@ const User = require("../../models/userSchema");
 const Address = require("../../models/addressSchema");
 const { format } = require("path");
 
-
-
-
 const getOrders = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1; 
-        const limit = 7; 
+        const page = parseInt(req.query.page) || 1;
+        const limit = 7;
         const skip = (page - 1) * limit;
 
         const totalOrders = await Order.countDocuments();
@@ -23,7 +20,7 @@ const getOrders = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        // Format dates
+
         orders.forEach(element => {
             const date = String(element.createdAt.getDate());
             const month = String(element.createdAt.getMonth() + 1);
@@ -51,10 +48,9 @@ const getOrders = async (req, res) => {
     }
 }
 
-
 const orderDetails = async (req, res) => {
     try {
-        const orderId = req.params.orderId; 
+        const orderId = req.params.orderId;
         const order = await Order.findById(orderId).populate('products.product');
         if (!order) {
             return res.status(404).render('error', {
@@ -70,23 +66,25 @@ const orderDetails = async (req, res) => {
     }
 }
 
-
 const updateOrderStatus = async (req, res) => {
     try {
-        const { orderId, newStatus } = req.body; 
+        const { orderId, newStatus } = req.body;
 
-        const order = await Order.findByIdAndUpdate(
-            orderId,
-            {
-                orderStatus: newStatus,
-                ...(newStatus === 'cancelled' && { cancelTime: new Date() }) 
-            },
-            { new: true }
-        );
+        const order = await Order.findById(orderId);
 
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
+
+        if (order.paymentStatus === 'failed') {
+            return res.status(400).json({ success: false, message: 'Cannot change order status when payment has failed' });
+        }
+
+        order.orderStatus = newStatus;
+        if (newStatus === 'cancelled') {
+            order.cancelTime = new Date();
+        }
+        await order.save();
 
         res.json({
             success: true,
@@ -98,8 +96,6 @@ const updateOrderStatus = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error updating order status' });
     }
 }
-
-
 
 module.exports = {
     getOrders,

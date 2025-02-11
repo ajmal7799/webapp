@@ -20,6 +20,7 @@ const getWallet = async (req, res) => {
             }
             return sum
         }, 0)
+        console.log(sumOfcredit)
 
         const sumOfDebit = wallets.reduce((sum, element) => {
             if (element.type == "Debit") {
@@ -29,24 +30,19 @@ const getWallet = async (req, res) => {
         }, 0)
 
         const balanceAmount = sumOfcredit - sumOfDebit
+        
         res.render('wallet', {
             user:userData,
             userId,
             wallets,
             balanceAmount,
         })
-
-
-
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "server error" })
 
     }
 }
-
-
 module.exports = {
     getWallet
 

@@ -2,7 +2,7 @@ const Order = require('../../models/orderSchema');
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
-const excel = require('exceljs');
+const excelJS = require('exceljs');
 
 
 
@@ -56,6 +56,7 @@ const loadSalesReport = async (req, res) => {
             end.setHours(23, 59, 59, 999);
             query.createdAt = { $gte: start, $lte: end };
         }
+        
 
         const totalOrders = await Order.find(query)
             .populate('userId')
@@ -65,7 +66,7 @@ const loadSalesReport = async (req, res) => {
         const totalSalesPrice = totalOrders.reduce((sum, order) => sum + order.totalAmount, 0);
         const saleCount = totalOrders.length;
         const couponDiscount = totalOrders.reduce((sum, order) => sum + order.discount, 0);
-        console.log('couponDiscount:', couponDiscount);
+        // console.log('couponDiscount:', couponDiscount);
 
         const order = await Order.find(query)
             .populate('userId')
@@ -102,6 +103,7 @@ const loadSalesReport = async (req, res) => {
 const downloadSalesPDF = async (req, res) => {
     try {
         const { filtervalue, startDate, endDate } = req.query;
+       
 
         let query = { orderStatus: 'delivered' };
 
@@ -230,58 +232,84 @@ const downloadSalesPDF = async (req, res) => {
     }
 };
 
-
-const downloadExcel = async (req,res)=>{
+const downloadExcel = async (req, res) => {
     try {
-        const salesData = await Order.find({ orderStatus: 'delivered' })
-            .populate('userId')
-            .populate('products.product')
-            .sort({ createdAt: -1 });
-
-        if (salesData.length === 0) {
-            return res.status(404).json({ message: 'No sales data available' });
+        const { salesData, filters } = req.body;
+        console.log(salesData, filters);
+        
+        if (!salesData || !Array.isArray(salesData) || salesData.length === 0) {
+            return res.status(400).json({ error: 'No data provided or invalid data format' });
         }
 
-        const excelData = salesData.map((order) => {
-            return order.products.map((item) => ({
-                Date: new Date(order.createdAt).toLocaleDateString(),
-                User: order.userId?.firstname || 'N/A',
-                Product: item.product?.name || 'N/A',
-                Quantity: item.quantity,
-                Price: item.price,
-                Total: item.price * item.quantity - (item.discount || 0),
-            }));
-        }).flat();
+        const workbook = new excelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Sales Report');
 
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.json_to_sheet(excelData);
+       
+        if (filters) {
+            worksheet.addRow(['Filter Type:', filters.filterValue || 'All']);
+            worksheet.addRow(['Date Range:', `${filters.startDate || 'Start'} to ${filters.endDate || 'End'}`]);
+            worksheet.addRow([]); 
+        }
 
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales Report');
+       
+        worksheet.columns = [
+            { header: 'Date', key: 'date', width: 15 },
+            { header: 'User', key: 'user', width: 20 },
+            { header: 'Product', key: 'product', width: 30 },
+            { header: 'Quantity', key: 'quantity', width: 10 },
+            { header: 'Price (₹)', key: 'price', width: 15 },
+            { header: 'Discount (₹)', key: 'discount', width: 15 },
+            { header: 'Total (₹)', key: 'total', width: 15 },
+            { header: 'Status', key: 'status', width: 15 },
+            { header: 'Payment Method', key: 'paymentMethod', width: 15 }
+        ];
 
-        const filePath = path.join(__dirname, '..', 'public', 'downloads', `sales-report-${Date.now()}.xlsx`);
-        XLSX.writeFile(workbook, filePath);
+       
+        const headerRow = worksheet.getRow(filters ? 4 : 1);
+        headerRow.font = { bold: true };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-        res.download(filePath, 'sales-report.xlsx', (err) => {
-            if (err) {
-                console.error('Error sending file:', err);
-                res.status(500).json({ message: 'Error downloading Excel file' });
-            }
-
-            fs.unlink(filePath, (unlinkErr) => {
-                if (unlinkErr) console.error('Error deleting file:', unlinkErr);
-            });
+        
+        salesData.forEach(data => {
+            worksheet.addRow(data);
         });
+
+       
+        const totalRow = worksheet.addRow({
+            date: 'Total',
+            quantity: salesData.reduce((sum, item) => sum + (item.quantity || 0), 0),
+            price: salesData.reduce((sum, item) => sum + (item.price || 0), 0),
+            discount: salesData.reduce((sum, item) => sum + (item.discount || 0), 0),
+            total: salesData.reduce((sum, item) => sum + (item.total || 0), 0)
+        });
+        totalRow.font = { bold: true };
+
+     
+        ['price', 'discount', 'total'].forEach(col => {
+            worksheet.getColumn(col).numFmt = '₹#,##0.00';
+        });
+
+        res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=sales_report_${new Date().toISOString().split('T')[0]}.xlsx`
+        );
+
+        await workbook.xlsx.write(res);
+        res.end();
     } catch (error) {
         console.error('Error generating Excel:', error);
-        res.status(500).json({ message: 'Error generating Excel' });
+        res.status(500).json({ error: error.message || 'Failed to generate Excel file' });
     }
-}
-
-
+};
 
 
 module.exports = {
     loadSalesReport,
     downloadSalesPDF,
-    downloadExcel
+    downloadExcel,
+   
 }

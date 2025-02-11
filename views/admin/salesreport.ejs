@@ -82,9 +82,11 @@
                 <h2 class="content-title card-title"> Sales Report</h2>
             </div>
             <div class="download-buttons">
-                <button class="btn btn-primary" onclick="window.location.href='/admin/sales-report/download-sales-pdf?<%= new URLSearchParams(currentFilters).toString() %>'">Download PDF</button>
-   
-                 <button class="btn btn-primary" id="downloadExcel">Download Excel</button>
+                <button class="btn btn-primary"
+                    onclick="window.location.href='/admin/sales-report/download-sales-pdf?<%= new URLSearchParams(currentFilters).toString() %>'">Download
+                    PDF</button>
+
+                <button class="btn btn-primary" id="downloadExcel">Download Excel</button>
 
             </div>
         </div>
@@ -181,7 +183,7 @@
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         <th>Price</th>
-                                        <th>Discount</th>
+                                        <th></th>
                                         <th>Total</th>
                                         <th>Status</th>
                                         <th>Payment Method</th>
@@ -208,7 +210,7 @@
                                                     </td>
                                                     <td>₹ <%= item.price %>
                                                     </td>
-                                                    <td>₹ <%= item.discount || 0 %>
+                                                    <td></td>
                                                     </td>
                                                     <td>₹ <%= item.price * item.quantity - (item.discount || 0) %>
                                                     </td>
@@ -260,6 +262,8 @@
     </section>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <!-- <script src="path/to/your/script.js"></script> -->
+
     <script>
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -278,14 +282,14 @@
                     filtervalue: filterValue,
                     startDate: startDate,
                     endDate: endDate,
-                    page: 1 
+                    page: 1
                 });
 
-                
+
                 window.location.href = `/admin/salesreport?${params.toString()}`;
             });
 
-            
+
             function initializeFilters() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const filterValue = urlParams.get('filtervalue');
@@ -306,274 +310,104 @@
             initializeFilters();
         });
 
-        document.getElementById('downloadPdf').addEventListener('click', function () {
-            
-            const filterValue = document.getElementById('filter-order').value;
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
+     
 
-            
-            const params = new URLSearchParams({
-                filtervalue: filterValue,
-                startDate: startDate,
-                endDate: endDate
+        function getSalesDataFromTable() {
+            const table = document.getElementById('salesTable');
+            if (!table) {
+                console.error('Sales table not found');
+                return [];
+            }
+
+            const rows = table.querySelectorAll('tbody tr');
+            const data = [];
+
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                if (cells.length > 0) {
+                    
+                    if (cells.length !== 1) {
+                        try {
+                            const price = cells[4].textContent.replace('₹', '').trim();
+                            const discount = cells[5].textContent.replace('₹', '').trim();
+                            const total = cells[6].textContent.replace('₹', '').trim();
+
+                            data.push({
+                                date: cells[0].textContent.trim(),
+                                user: cells[1].textContent.trim(),
+                                product: cells[2].textContent.trim(),
+                                quantity: parseInt(cells[3].textContent.trim()) || 0,
+                                price: parseFloat(price) || 0,
+                                discount: parseFloat(discount) || 0,
+                                total: parseFloat(total) || 0,
+                                status: cells[7].textContent.trim(),
+                                paymentMethod: cells[8].textContent.trim()
+                            });
+                        } catch (error) {
+                            console.error('Error parsing row:', error);
+                        }
+                    }
+                }
             });
 
-            window.location.href = `/salesreport?${params.toString()}`;
+            console.log('Extracted data:', data); 
+            return data;
+        }
+
+        document.getElementById('downloadExcel').addEventListener('click', async () => {
+            try {
+                const tableData = getSalesDataFromTable();
+
+                if (!tableData.length) {
+                    alert('No data available to download');
+                    return;
+                }
+
+                
+                const filterValue = document.getElementById('filter-order').value;
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+
+                const response = await fetch('/admin/sales-report/excel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        salesData: tableData,
+                        filters: {
+                            filterValue,
+                            startDate,
+                            endDate
+                        }
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+
+                const blob = await response.blob();
+                if (blob.size === 0) {
+                    throw new Error('Received empty file');
+                }
+
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `sales_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error downloading excel:', error);
+                alert(`Failed to download Excel file: ${error.message}`);
+            }
         });
 
-
-
-        // document.getElementById('downloadPdf').addEventListener('click', async () => {
-        //   const tableData = getSalesDataFromTable();
-        //   const response = await fetch('/admin/sales-report/pdf', {
-        //     method: 'POST',
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify({ salesData: tableData }),
-        //   });
-
-
-        //   const blob = await response.blob();
-        //   const link = document.createElement('a');
-        //   link.href = window.URL.createObjectURL(blob);
-        //   link.download = 'sales_report.pdf';
-        //   link.click();
-        // });
-
-        // document.getElementById('downloadExcel').addEventListener('click', async () => {
-        //   const tableData = getSalesDataFromTable();
-        //   const response = await fetch('/admin/sales-report/excel', {
-        //     method: 'POST',
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify({ salesData: tableData }),
-        //   });
-
-
-        //   const blob = await response.blob();
-        //   const link = document.createElement('a');
-        //   link.href = window.URL.createObjectURL(blob);
-        //   link.download = 'sales_report.xlsx';
-        //   link.click();
-        // });
-
-        // async function filterOrder() {
-        //     const filtervalue = document.getElementById('filter-order').value;
-        //     const startDate = document.getElementById('start-date').value;
-        //     const endDate = document.getElementById('end-date').value;
-        //     const page = 1; // Always start from first page when filtering
-
-        //     try {
-        //         const response = await fetch(`/admin/salesreport?filtervalue=${filtervalue}&startDate=${startDate}&endDate=${endDate}&page=${page}`, {
-        //             method: 'GET',
-        //             headers: {
-        //                 "Content-Type": "application/json"
-        //             }
-        //         });
-
-        //         const data = await response.json();
-
-        //         if (data.orders) {
-        //             const filterTable = document.querySelector("table tbody");
-        //             filterTable.innerHTML = "";
-        //             data.orders.forEach(order => {
-        //                 order.products.forEach(item => {
-        //                     const row = `
-        //                         <tr>
-        //                             <td>${new Date(order.createdAt).toLocaleDateString()}</td>
-        //                             <td>${order.userId ? order.userId.firstname : 'N/A'}</td>
-        //                             <td>${item.product?.name}</td>
-        //                             <td>${item.quantity}</td>
-        //                             <td>₹ ${item.price}</td>
-        //                             <td>₹ ${item.discount || 0}</td>
-        //                             <td>₹ ${item.price * item.quantity - (item.discount || 0)}</td>
-        //                             <td>${order.orderStatus || "Pending"}</td>
-        //                             <td>${order.paymentMethod}</td>
-        //                         </tr>`;
-        //                     filterTable.insertAdjacentHTML("beforeend", row);
-        //                 });
-        //             });
-
-        //             document.querySelector('.text-primary').innerHTML = data.saleCount;
-        //             document.querySelector('.text-success').innerHTML = `₹ ${data.totalSalePrice}`;
-        //             document.querySelector('.text-danger').innerHTML = `₹ ${data.couponDiscount}`;
-
-        //             updatePagination(data.totalPage, page);
-        //         }
-        //     } catch (error) {
-        //         console.error('Error filtering orders:', error);
-        //     }
-        // }
-
-        // async function filterByDate() {
-        //     const startDate = document.getElementById('start-date').value;
-        //     const endDate = document.getElementById('end-date').value;
-        //     const page = 1; // Always start from first page when filtering
-
-        //     try {
-        //         const response = await fetch(`/admin/salesreport?startDate=${startDate}&endDate=${endDate}&page=${page}`, {
-        //             method: 'GET',
-        //             headers: {
-        //                 "Content-Type": "application/json"
-        //             }
-        //         });
-
-        //         const data = await response.json();
-
-        //         if (data.orders) {
-        //             const filterTable = document.querySelector("table tbody");
-        //             filterTable.innerHTML = "";
-        //             data.orders.forEach(order => {
-        //                 order.products.forEach(item => {
-        //                     const row = `
-        //                         <tr>
-        //                             <td>${new Date(order.createdAt).toLocaleDateString()}</td>
-        //                             <td>${order.userId ? order.userId.firstname : 'N/A'}</td>
-        //                             <td>${item.product?.name}</td>
-        //                             <td>${item.quantity}</td>
-        //                             <td>₹ ${item.price}</td>
-        //                             <td>₹ ${item.discount || 0}</td>
-        //                             <td>₹ ${item.price * item.quantity - (item.discount || 0)}</td>
-        //                             <td>${order.orderStatus || "Pending"}</td>
-        //                             <td>${order.paymentMethod}</td>
-        //                         </tr>`;
-        //                     filterTable.insertAdjacentHTML("beforeend", row);
-        //                 });
-        //             });
-
-        //             document.querySelector('.text-primary').innerHTML = data.saleCount;
-        //             document.querySelector('.text-success').innerHTML = `₹ ${data.totalSalePrice}`;
-        //             document.querySelector('.text-danger').innerHTML = `₹ ${data.couponDiscount}`;
-
-        //             updatePagination(data.totalPage, page);
-        //         }
-        //     } catch (error) {
-        //         console.error('Error filtering orders:', error);
-        //     }
-        // }
-
-        // function updatePagination(totalPage, currentPage) {
-        //     const paginationContainer = document.querySelector('.pagination-container');
-        //     const pagination = document.createElement('ul');
-        //     pagination.className = 'pagination';
-
-        //     if (currentPage > 1) {
-        //         const prevPage = document.createElement('li');
-        //         prevPage.className = 'page-item';
-        //         prevPage.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">&laquo; Previous</a>`;
-        //         pagination.appendChild(prevPage);
-        //     }
-
-        //     for (let i = 1; i <= totalPage; i++) {
-        //         const pageItem = document.createElement('li');
-        //         pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
-        //         pageItem.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>`;
-        //         pagination.appendChild(pageItem);
-        //     }
-
-        //     if (currentPage < totalPage) {
-        //         const nextPage = document.createElement('li');
-        //         nextPage.className = 'page-item';
-        //         nextPage.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage + 1})">Next &raquo;</a>`;
-        //         pagination.appendChild(nextPage);
-        //     }
-
-        //     paginationContainer.innerHTML = '';
-        //     paginationContainer.appendChild(pagination);
-        // }
-
-        // async function goToPage(page) {
-        //     const filtervalue = document.getElementById('filter-order').value;
-        //     const startDate = document.getElementById('start-date').value;
-        //     const endDate = document.getElementById('end-date').value;
-
-        //     try {
-        //         const response = await fetch(`/admin/salesreport?page=${page}&filtervalue=${filtervalue}&startDate=${startDate}&endDate=${endDate}`, {
-        //             method: 'GET',
-        //             headers: {
-        //                 "Content-Type": "application/json"
-        //             }
-        //         });
-
-        //         const data = await response.json();
-
-        //         if (data.orders) {
-        //             const filterTable = document.querySelector("table tbody");
-        //             filterTable.innerHTML = "";
-        //             data.orders.forEach(order => {
-        //                 order.products.forEach(item => {
-        //                     const row = `
-        //                         <tr>
-        //                             <td>${new Date(order.createdAt).toLocaleDateString()}</td>
-        //                             <td>${order.userId ? order.userId.firstname : 'N/A'}</td>
-        //                             <td>${item.product?.name}</td>
-        //                             <td>${item.quantity}</td>
-        //                             <td>₹ ${item.price}</td>
-        //                             <td>₹ ${item.discount || 0}</td>
-        //                             <td>₹ ${item.price * item.quantity - (item.discount || 0)}</td>
-        //                             <td>${order.orderStatus || "Pending"}</td>
-        //                             <td>${order.paymentMethod}</td>
-        //                         </tr>`;
-        //                     filterTable.insertAdjacentHTML("beforeend", row);
-        //                 });
-        //             });
-
-        //             document.querySelector('.text-primary').innerHTML = data.saleCount;
-        //             document.querySelector('.text-success').innerHTML = `₹ ${data.totalSalePrice}`;
-        //             document.querySelector('.text-danger').innerHTML = `₹ ${data.couponDiscount}`;
-
-        //             updatePagination(data.totalPage, page);
-        //         }
-        //     } catch (error) {
-        //         console.error('Error fetching page:', error);
-        //     }
-        // }
-
-        // function getSalesDataFromTable() {
-        //     const tableRows = document.querySelectorAll('#salesTable tbody tr');
-        //     const salesData = [];
-
-        //     tableRows.forEach((row) => {
-        //         const cells = row.querySelectorAll('td');
-        //         salesData.push({
-        //             date: cells[0].innerText,
-        //             product: cells[2].innerText,
-        //             userId: { name: cells[1].innerText },
-        //             totalAmount: Number(cells[4].innerText.slice(2)),
-        //             status: cells[7].innerText,
-        //         });
-        //     });
-
-        //     return salesData;
-        // }
-
-        //     async function prepareFilterOptions() {
-        //     const paymentMethods = await Order.distinct('paymentMethod');
-        //     const orderStatuses = await Order.distinct('orderStatus');
-        //     const users = await Order.aggregate([
-        //         { $group: { _id: '$userId', count: { $sum: 1 } } },
-        //         { $lookup: { 
-        //             from: 'users', 
-        //             localField: '_id', 
-        //             foreignField: '_id', 
-        //             as: 'userDetails' 
-        //         }},
-        //         { $unwind: '$userDetails' }
-        //     ]);
-
-        //     return {
-        //         paymentMethods,
-        //         orderStatuses,
-        //         users: users.map(u => ({
-        //             id: u._id,
-        //             name: u.userDetails.firstname,
-        //             orderCount: u.count
-        //         }))
-        //     };
-        // }
-
     </script>
+
+
     <%- include("../../views/partials/admin/footer") %>
