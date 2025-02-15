@@ -44,55 +44,57 @@
                                             onclick="viewOrderDetails('<%= order._id %>')">
                                             View Details
                                         </button>
-                                        <% if (order.orderStatus === 'pending') { %>
-                                            <button class="btn btn-danger btn-sm" onclick="cancelOrder('<%= order._id %>')">
+                                        <% if (order.orderStatus==='pending' ) { %>
+                                            <button class="btn btn-danger btn-sm"
+                                                onclick="cancelOrder('<%= order._id %>')">
                                                 Cancel Order
                                             </button>
-                                        <% } %>
-                                        <% if (order.orderStatus === 'delivered') { %>
-                                            <button class="btn btn-warning btn-sm" onclick="initiateReturn('<%= order._id %>', '<%= item.product._id %>')">
-                                                Return Item
-                                            </button>
-                                        <% } %>
+                                            <% } %>
+                                                <% if (order.orderStatus==='delivered' ) { %>
+                                                    <button class="btn btn-warning btn-sm"
+                                                        onclick="initiateReturn('<%= order._id %>', '<%= item.product._id %>')">
+                                                        Return Item
+                                                    </button>
+                                                    <% } %>
                                     </div>
                                 </div>
                             </div>
-                        <% }); %>
-                        <div class="text-right">
-                            <strong>Total Amount: ₹<%= order.totalAmount.toFixed(2) %></strong>
-                        </div>
+                            <% }); %>
+                                <div class="text-right">
+                                    <strong>Total Amount: ₹<%= order.totalAmount.toFixed(2) %></strong>
+                                </div>
                     </div>
                 </div>
-            <% }); %>
-            <nav aria-label="Order navigation">
-                <ul class="pagination justify-content-center">
-                    <% if (hasPreviousPage) { %>
-                        <li class="page-item">
-                            <a class="page-link" href="?page=<%= previousPage %>">Previous</a>
-                        </li>
-                    <% } %>
+                <% }); %>
+                    <nav aria-label="Order navigation">
+                        <ul class="pagination justify-content-center">
+                            <% if (hasPreviousPage) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=<%= previousPage %>">Previous</a>
+                                </li>
+                                <% } %>
 
-                    <% for(let i=1; i <=totalPages; i++) { %>
-                        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                            <a class="page-link" href="?page=<%= i %>">
-                                <%= i %>
-                            </a>
-                        </li>
-                    <% } %>
+                                    <% for(let i=1; i <=totalPages; i++) { %>
+                                        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                            <a class="page-link" href="?page=<%= i %>">
+                                                <%= i %>
+                                            </a>
+                                        </li>
+                                        <% } %>
 
-                    <% if (hasNextPage) { %>
-                        <li class="page-item">
-                            <a class="page-link" href="?page=<%= nextPage %>">Next</a>
-                        </li>
-                    <% } %>
-                </ul>
-            </nav>
+                                            <% if (hasNextPage) { %>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=<%= nextPage %>">Next</a>
+                                                </li>
+                                                <% } %>
+                        </ul>
+                    </nav>
 
-        <% } else { %>
-            <div class="alert alert-info text-center">
-                You haven't placed any orders yet.
-            </div>
-        <% } %>
+                    <% } else { %>
+                        <div class="alert alert-info text-center">
+                            You haven't placed any orders yet.
+                        </div>
+                        <% } %>
     </div>
 
     <script>
@@ -103,20 +105,65 @@
         function cancelOrder(orderId) {
             Swal.fire({
                 title: 'Cancel Order',
-                text: 'Are you sure you want to cancel this order?',
+                html: `
+            <div class="form-group">
+                <label for="cancellationReason">Please select a reason for cancellation:</label>
+                <select id="cancellationReason" class="form-control mt-2">
+                    <option value="">Select a reason</option>
+                    <option value="changed_mind">Changed my mind</option>
+                    <option value="wrong_item">Ordered wrong item</option>
+                    <option value="delivery_time">Delivery time too long</option>
+                    <option value="found_better_price">Found better price elsewhere</option>
+                    <option value="duplicate_order">Duplicate order</option>
+                    <option value="other">Other</option>
+                </select>
+                <textarea id="otherReason" class="form-control mt-2" placeholder="Please specify other reason" style="display: none;"></textarea>
+            </div>
+        `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Yes, Cancel Order',
-                cancelButtonText: 'No, Keep Order'
+                cancelButtonText: 'No, Keep Order',
+                didOpen: () => {
+
+                    const reasonSelect = document.getElementById('cancellationReason');
+                    const otherReasonTextarea = document.getElementById('otherReason');
+
+                    reasonSelect.addEventListener('change', (e) => {
+                        otherReasonTextarea.style.display = e.target.value === 'other' ? 'block' : 'none';
+                    });
+                },
+                preConfirm: () => {
+                    const reason = document.getElementById('cancellationReason').value;
+                    if (!reason) {
+                        Swal.showValidationMessage('Please select a cancellation reason');
+                        return false;
+                    }
+                    const otherReason = document.getElementById('otherReason').value;
+                    if (reason === 'other' && !otherReason.trim()) {
+                        Swal.showValidationMessage('Please specify the other reason');
+                        return false;
+                    }
+                    return {
+                        reason: reason,
+                        otherReason: otherReason
+                    };
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/cancel-order/${orderId}`, {
-                        method: 'POST', headers: {
-                            'Content-Type': 'application/json'
+                    const reasonData = {
+                        reason: result.value.reason,
+                        otherReason: result.value.otherReason
+                    };
 
-                        }
+                    fetch(`/cancel-order/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(reasonData)
                     })
                         .then(response => response.json())
                         .then(data => {

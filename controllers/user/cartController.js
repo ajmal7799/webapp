@@ -9,8 +9,24 @@ const Wallet = require("../../models/walletSchema");
 
 const getCartPage = async (req, res) => {
     try {
-        const cart = await Cart.findOne({ userId: req.user._id }).populate("books.product");
-        const userData = await User.findOne({ _id: req.session.user._id });
+
+        if (!req.session || !req.session.user) {
+            return res.render('login', {
+                message: 'Please login to access your cart'
+            });
+        }
+
+        const userId = req.session.user;
+
+        const cart = await Cart.findOne({ userId}).populate("books.product");
+        const userData = await User.findOne({ _id:userId});
+
+        if (!userData) {
+            req.session.destroy();
+            return res.render('login', {
+                message: 'Please login to continue'
+            });
+        }
 
         // console.log(userData,"hello")
         res.render("cart", { cart,user:userData });
@@ -22,8 +38,17 @@ const getCartPage = async (req, res) => {
 
 const addToCart = async (req, res) => {
     try {
+        
+
+        if (!req.session || !req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Please login to add items to your cart'
+            });
+        }
+       
         const { id } = req.body; 
-        const userId = req.user._id;
+        const userId =  req.session.user._id;
 
         const product = await Product.findById(id);
         if (!product) {

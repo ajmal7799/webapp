@@ -6,9 +6,25 @@ const { default: mongoose } = require("mongoose");
 
 const getWishlistPage = async(req,res)=>{
     try {
-        let userId=req.user._id
+
+        if(!req.session || !req.session.user){
+            return res.render('login',{
+                message: 'Please login to access your wishlist',
+            });
+        }
+
+
+        let userId= req.session.user
         const wishlist = await Wishlist.findOne({userId}).populate("books.product") || { books: [] };
-        const userData = await User.findOne({_id:req.session.user._id});
+        const userData = await User.findOne({_id:userId});
+
+        if (!userData) {
+            req.session.destroy();
+            return res.render('login', {
+                message: 'Please login to continue'
+            });
+        }
+
         res.render("wishlist",{wishlist,user:userData});
 
         

@@ -16,13 +16,32 @@ const PDFDocument = require('pdfkit');
 
 const getOrder = async (req, res) => {
     try {
+        if (!req.session || !req.session.user) {
+            return res.render('login', {
+                message: 'Please login to view your orders'
+            });
+        }
         const page = parseInt(req.query.page) || 1
         const limit = 4;
         const skip = (page - 1) * limit;
 
-        const userId = req.user._id;
+        const userId = req.session.user._id;
 
         const totalOrders = await Order.countDocuments({ userId });
+
+        if (totalOrders === 0) {
+            return res.render("orders", {
+                orders: [],
+                user: null,
+                currentPage: 1,
+                totalPages: 0,
+                hasNextPage: false,
+                hasPreviousPage: false,
+                nextPage: 1,
+                previousPage: 1,
+                message: "No orders found"
+            });
+        }
 
         const orders = await Order.find({ userId })
             .populate('products.product')
@@ -31,9 +50,8 @@ const getOrder = async (req, res) => {
             .limit(limit);
 
         const totalPages = Math.ceil(totalOrders / limit);
-        const userData = await User.findOne({ _id: req.session.user._id });
-        console.log(orders)
-        // console.log(userData)
+        const userData = await User.findOne({ _id: userId });
+        
 
         res.render("orders", {
             orders,
@@ -58,8 +76,7 @@ const placeOrder = async (req, res) => {
         const userId = req.user._id;
         const { selectedAddress, paymentMethod, couponCode } = req.body;
 
-        console.log(paymentMethod, "paymentMethod")
-        // console.log(useFullWallet,"useFullWallet")
+      
 
         const cart = await Cart.findOne({ userId }).populate("books.product");
         if (!cart || cart.books.length === 0) {
@@ -315,29 +332,24 @@ const placeOrder = async (req, res) => {
 
 
 const verifyPayment = async (req, res) => {
-    console.log("🔵 Payment verification function triggered!");
 
     try {
-        console.log("🟢 Request body:", req.body);
 
         const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
 
         // Early validation with detailed logging
         if (!razorpay_order_id || !razorpay_payment_id) {
             const errorMsg = `Missing required fields: ${!razorpay_order_id ? 'order_id' : ''} ${!razorpay_payment_id ? 'payment_id' : ''}`;
-            console.error("❌ Validation Error:", errorMsg);
             return res.status(400).json({ success: false, message: "Invalid payment data" });
         }
 
-        console.log("🟡 Searching for order in the database...");
         const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
 
         if (!order) {
-            console.error("❌ Database Error: Order not found for Razorpay Order ID:", razorpay_order_id);
             return res.status(404).json({ success: false, message: "Order not found" });
         }
 
-        console.log("🟡 Verifying Razorpay signature...");
+      
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -345,23 +357,17 @@ const verifyPayment = async (req, res) => {
             .digest("hex");
 
         const isSignatureValid = expectedSignature === razorpay_signature;
-        console.log("🟡 Signature verification result:", isSignatureValid ? "Valid" : "Invalid");
 
         if (isSignatureValid) {
-            console.log("✅ Payment verified successfully!");
             const updatedOrder = await Order.findOneAndUpdate(
                 { razorpayOrderId: razorpay_order_id },
                 { $set: { paymentStatus: "completed", orderStatus: "processing" } },
                 { new: true }
             );
-            console.log("✅ Order updated as completed:", updatedOrder);
             return res.json({ success: true, orderId: order._id });
         }
 
-        // If signature verification fails
-        console.error("❌ Payment verification failed! Invalid signature");
-        console.error("Expected:", expectedSignature);
-        console.error("Received:", razorpay_signature);
+        
 
         const failedOrder = await Order.findOneAndUpdate(
             { razorpayOrderId: razorpay_order_id },
@@ -372,12 +378,12 @@ const verifyPayment = async (req, res) => {
             }},
             { new: true }
         );
-        console.error("❌ Order updated as failed:", failedOrder);
+        
 
         return res.status(400).json({ success: false, message: "Payment verification failed", orderId: failedOrder._id });
 
     } catch (error) {
-        console.error("❌ Error during payment verification:", {
+        console.error(" Error during payment verification:", {
             message: error.message,
             stack: error.stack,
             orderId: req.body.razorpay_order_id
@@ -393,10 +399,10 @@ const verifyPayment = async (req, res) => {
                 }},
                 { new: true }
             );
-            console.error("❌ Order updated with error details:", errorUpdate);
+            console.error(" Order updated with error details:", errorUpdate);
             return res.status(500).json({ success: false, message: "Payment verification failed due to server error", orderId: errorUpdate._id });
         } catch (dbError) {
-            console.error("❌ Failed to update order with error:", dbError);
+            console.error(" Failed to update order with error:", dbError);
             return res.status(500).json({ success: false, message: "Payment verification failed due to server error" });
         }
     }
@@ -429,7 +435,10 @@ const getOrderDetails = async (req, res) => {
 
 const cancelOrder = async (req, res) => {
     try {
+       
         const orderId = req.params.orderId;
+        const {reason,otherReason} = req.body;
+        
         const order = await Order.findById(orderId);
 
         if (!order) {
@@ -440,7 +449,7 @@ const cancelOrder = async (req, res) => {
             return res.status(400).json({ error: 'Only pending orders can be cancelled' });
         }
 
-        for (let item of order.products) {
+        for ( let item of order.products ) {
             const product = await Product.findById(item.product);
             if (product) {
                 product.availableQuantity += item.quantity;
@@ -473,6 +482,7 @@ const cancelOrder = async (req, res) => {
 const returnOrder = async (req, res) => {
     try {
         const { orderId, productId } = req.params;
+
 
         const order = await Order.findById(orderId);
 
@@ -554,6 +564,7 @@ const downloadInvoice = async (req, res) => {
         doc.fontSize(20).text('Invoice', { align: 'center' });
         doc.moveDown();
 
+
         doc.fontSize(12)
             .text(`Order ID: ${order._id}`)
             .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`)
@@ -589,6 +600,7 @@ const downloadInvoice = async (req, res) => {
 
         doc.fontSize(14).text('Order Summary:', 50, y + 20);
         y += 40;
+
 
         doc.fontSize(12)
             .text(`Subtotal: ₹${(order.totalAmount + order.discount).toFixed(2)}`, 50, y)

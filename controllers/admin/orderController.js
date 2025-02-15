@@ -20,6 +20,12 @@ const getOrders = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
+            const formattedOrders = orders.map(order => ({
+                ...order.toObject(),
+                userId: order.userId || { email: 'User Deleted' }, // Provide fallback
+                formatdate: order.formatdate || order.createdAt // Ensure date exists
+            }));
+
 
         orders.forEach(element => {
             const date = String(element.createdAt.getDate());
@@ -29,7 +35,7 @@ const getOrders = async (req, res) => {
         });
 
         res.render('order', {
-            orders,
+            orders:formattedOrders,
             title: `Orders Management`,
             pagination: {
                 page,

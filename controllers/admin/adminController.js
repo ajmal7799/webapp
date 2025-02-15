@@ -45,173 +45,22 @@ const login = async (req, res) => {
 }
 
 
-// const loadDashboard = async (req, res) => {
-//     try {
-//         console.log("Dashboard loaded"); 
-
-//         const revenueData = await Order.aggregate([
-//             { $unwind: "$products" },
-//             { $match: { "products.orderStatus": "delivered" } },
-//             // Group by order _id so that if an order has multiple delivered products,
-//             // its totalAmount is counted only once.
-//             { $group: { _id: "$_id", orderTotal: { $first: "$totalAmount" } } },
-//             { $group: { _id: null, totalRevenue: { $sum: "$orderTotal" } } }
-//           ]);
-//           const totalRevenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
-//           console.log(totalRevenue);
-
-
-//           const cancelledData = await Order.aggregate([
-//             { $unwind: "$products" },
-//             { $match: { "products.orderStatus": "cancelled" } },
-//             { $group: { _id: "$_id" } },
-//             { $group: { _id: null, totalCancelled: { $sum: 1 } } }
-//           ]);
-//           const cancelledCount = cancelledData.length > 0 ? cancelledData[0].totalCancelled : 0;
-
-//         const salesData = await Order.countDocuments();
-
-//         const newUsersCount = await User.countDocuments();
-
-//         const product = await Order.aggregate([
-//             {$unwind:"$products"},
-//             {
-//                 $group:{
-//                     _id:"$products.product",
-//                     totalOrder:{$sum:"$products.quantity"}
-//                 },
-//             },
-//             {
-//                 $lookup:{
-//                     from:"products",
-//                     localField:"_id",
-//                     foreignField:"_id",
-//                     as:"productDetails"
-//                 },
-//             },
-//             {$unwind:"$productDetails"},
-//             {
-//                 $project:{
-//                     _id:1,
-//                     productName:"$productDetails.productName",
-//                     totalOrder:1
-//                 },
-//             },
-//             {$sort:{totalOrder:-1}},
-//             {$limit:4}
-//         ]);
-
-//         const category = await Order.aggregate([
-//             {$unwind:"$products"},
-//             {
-//                 $lookup:{
-//                     from:"products",
-//                     localField:"products.product",
-//                     foreignField:"_id",
-//                     as:"productDetails",
-//                 },
-//             },
-//             {$unwind:"$productDetails"},
-//             {
-//                 $group:{
-//                     _id:"$productDetails.category",
-//                     totalOrder:{$sum:"$products.quantity"}
-//                 },
-//             },
-//             {
-//                 $lookup:{
-//                     from:"categories",
-//                     localField:"_id",
-//                     foreignField:"_id",
-//                     as:"categoryDetails"
-//                 },
-//             },
-//             {$unwind:"$categoryDetails"},
-//             {
-//                 $project:{
-//                     _id:1,
-//                     categoryName:"$categoryDetails.categoryName",
-//                     totalOrder:1
-//                 },
-//             },
-//             {$sort:{totalOrder:-1}},
-//             {$limit:4}
-//         ]);
-
-       
-
-//         const users = await User.aggregate([
-//             {
-//                 $group:{
-//                     _id:{
-//                         $dateToString:{format:"%Y-%m-%d",date:"$createdAt"}
-//                     },
-//                     count:{$sum:1}
-//                 }
-//             },
-//             {$sort:{_id:-1}},
-//             {$limit:4}
-//         ]);
-
-//         const productData = product.map((item) => ({
-//             productName: item.productName,
-//             totalOrder: item.totalOrder,
-//         }));
-
-//         const categoryData = category.map((cat) => ({
-//             categoryName: cat.categoryName,
-//             totalOrder: cat.totalOrder,
-//         }));
-
- 
-//         const userData = users.map((user) => ({
-//             date: user._id,
-//             count: user.count,
-//         }));
-
-//         console.log(productData);
-
-//         res.render("dashboard", {
-//             productData,
-//             categoryData,
-//             userData,
-//             totalRevenue,
-//             cancelledCount,
-//             salesData,
-//             newUsersCount,
-//         });
-
-//     } catch (error) {
-//         console.error('Error fetching order details:', error);
-//         res.status(500).send("Internal server error");
-//     }
-// };
 
 const loadDashboard = async (req, res) => {
+
+    
+    
     try {
-      // Fetch total revenue
-      const revenueData = await Order.aggregate([
-        { $unwind: "$products" },
-        { $match: { "products.orderStatus": "delivered" } },
-        {
-          $group: {
-            _id: "$_id",
-            orderTotal: { $first: "$totalAmount" },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            totalRevenue: { $sum: "$orderTotal" },
-          },
-        },
-      ]);
-      const totalRevenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
-  
-      // Fetch cancelled orders count
+        const orders = await Order.find({
+            orderStatus: "delivered",
+        });
+      
+   
+      const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    
       const cancelledData = await Order.aggregate([
         { $unwind: "$products" },
-        { $match: { "products.orderStatus": "cancelled" } },
+        { $match: { "orderStatus": "cancelled" } },
         {
           $group: {
             _id: "$_id",
@@ -226,13 +75,15 @@ const loadDashboard = async (req, res) => {
       ]);
       const cancelledCount = cancelledData.length > 0 ? cancelledData[0].totalCancelled : 0;
   
-      // Fetch total sales count
-      const salesData = await Order.countDocuments();
+   
+      const salesData = await Order.countDocuments({
+        orderStatus: 'delivered',
+      });
   
-      // Fetch new users count
+     
       const newUsersCount = await User.countDocuments();
   
-      // Fetch top 10 products
+      
       const product = await Order.aggregate([
         { $unwind: "$products" },
         {
@@ -253,15 +104,16 @@ const loadDashboard = async (req, res) => {
         {
           $project: {
             _id: 1,
-            productName: "$productDetails.productName",
+            productName: "$productDetails.name",
             totalOrder: 1,
           },
         },
         { $sort: { totalOrder: -1 } },
-        { $limit: 10 }, // Fetch top 10 products
+        { $limit: 10 }, 
       ]);
+     
   
-      // Fetch top 10 categories
+      
       const category = await Order.aggregate([
         { $unwind: "$products" },
         {
@@ -275,7 +127,7 @@ const loadDashboard = async (req, res) => {
         { $unwind: "$productDetails" },
         {
           $group: {
-            _id: "$productDetails.category",
+            _id: "$productDetails.category_id",
             totalOrder: { $sum: "$products.quantity" },
           },
         },
@@ -291,15 +143,16 @@ const loadDashboard = async (req, res) => {
         {
           $project: {
             _id: 1,
-            categoryName: "$categoryDetails.categoryName",
+            categoryName: "$categoryDetails.name",
             totalOrder: 1,
           },
         },
         { $sort: { totalOrder: -1 } },
-        { $limit: 10 }, // Fetch top 10 categories
+        { $limit: 10 }, 
       ]);
+     
   
-      // Fetch new users (last 4 days)
+      
       const users = await User.aggregate([
         {
           $group: {
@@ -313,12 +166,14 @@ const loadDashboard = async (req, res) => {
         { $limit: 4 },
       ]);
   
-      // Format data for the frontend
+     
       const productData = product.map((item) => ({
         productName: item.productName,
         totalOrder: item.totalOrder,
       }));
   
+      console.log(productData)
+
       const categoryData = category.map((cat) => ({
         categoryName: cat.categoryName,
         totalOrder: cat.totalOrder,
@@ -328,8 +183,9 @@ const loadDashboard = async (req, res) => {
         date: user._id,
         count: user.count,
       }));
+  console.log(categoryData)
   
-      // Render the dashboard with data
+      
       res.render("dashboard", {
         productData,
         categoryData,
@@ -343,7 +199,191 @@ const loadDashboard = async (req, res) => {
       console.error("Error fetching order details:", error);
       res.status(500).send("Internal server error");
     }
-  };
+};
+
+
+
+const getFilterData = async (filter = 'default') => {
+    let startDate, endDate = new Date();
+    
+    switch(filter) {
+        case 'daily':
+            startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'weekly':
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() - 7);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'monthly':
+            startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - 1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'yearly':
+            startDate = new Date();
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        default:
+            startDate = new Date(0);
+    }
+
+    
+        const orders = await Order.find({
+            createdAt: { $gte: startDate, $lte: endDate },
+            orderStatus: "delivered"
+        });
+    
+       
+        const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+        const salesData = orders.length;
+    
+       
+        const cancelledCount = await Order.countDocuments({
+            createdAt: { $gte: startDate, $lte: endDate },
+            orderStatus: 'cancelled'
+        });
+    
+        
+        const newUsersCount = await User.countDocuments({
+            createdAt: { $gte: startDate, $lte: endDate }
+        });
+    
+        
+        const productData = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate, $lte: endDate },
+                    orderStatus: { $ne: 'cancelled' }
+                }
+            },
+            { $unwind: '$products' },
+            {
+                $group: {
+                    _id: '$products.product',
+                    totalOrder: { $sum: '$products.quantity' }
+                }
+            },
+            { $sort: { totalOrder: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'productInfo'
+                }
+            },
+      {
+  $project: {
+    productName: { $arrayElemAt: ['$productInfo.name', 0] },
+    totalOrder: 1
+  }
+}
+        ]);
+    
+       
+        const categoryData = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate, $lte: endDate },
+                    orderStatus: { $ne: 'cancelled' }
+                }
+            },
+            { $unwind: '$products' },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'products.product',
+                    foreignField: '_id',
+                    as: 'productInfo'
+                }
+            },
+            { $unwind: '$productInfo' },
+            {
+                $group: {
+                    _id: '$productInfo.category_id',
+                    totalOrder: { $sum: '$products.quantity' }
+                }
+            },
+            { $sort: { totalOrder: -1 } },
+            { $limit: 4 },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'categoryInfo'
+                }
+            },
+            {
+                $project: {
+                  categoryName: { $arrayElemAt: ['$categoryInfo.name', 0] }, 
+                  totalOrder: 1
+                }
+              }
+        ]);
+    
+       
+        const userData = await User.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate, $lte: endDate }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } },
+            {
+                $project: {
+                    date: '$_id',
+                    count: 1,
+                    _id: 0
+                }
+            }
+        ]);
+    
+        return {
+            totalRevenue,
+            salesData,
+            cancelledCount,
+            newUsersCount,
+            productData,
+            categoryData,
+            userData
+        };
+};
+  const getDashboardData = async (req, res) => {
+    console.log('Fetching dashboard data');
+    try {
+        const filter = req.query.filter || 'default';
+        const data = await getFilterData(filter);
+
+        console.log(data);
+        
+        res.json({
+            totalRevenue: data.totalRevenue,
+            salesData: data.salesData,
+            cancelledCount: data.cancelledCount,
+            newUsersCount: data.newUsersCount,
+            productData: data.productData,
+            categoryData: data.categoryData,
+            userData: data.userData
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+
   
 const logout = async(req,res)=>{
     try {
@@ -369,5 +409,6 @@ module.exports = {
     loadDashboard,
     pageerror,
     logout,
+    getDashboardData,
 }
 

@@ -36,6 +36,9 @@ router.get("/pageerror",adminController.pageerror)
 router.get("/login",adminController.loadLogin)
 router.post("/login",adminController.login);
 router.get("/dashboard",adminAuth,adminController.loadDashboard)
+router.get('/filter', adminAuth, adminController.getDashboardData);
+
+
 router.get("/logout",adminController.logout);
 
 // Customer management
@@ -122,8 +125,7 @@ router.get('/sales-report/download-sales-pdf', adminAuth,salesController.downloa
 router.post('/sales-report/excel',adminAuth,salesController.downloadExcel)
 
 
-// router.get('/dashboard',adminAuth,dashboardController.loadDashboard);  
-// router.get('/filterData', adminAuth, dashboardController.filterData);
+
 
 
 module.exports = router;

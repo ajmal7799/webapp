@@ -4,8 +4,8 @@ const User = require("../../models/userSchema");
 const getWallet = async (req, res) => {
     try {
 
-        const userId = req.user._id;
-        const userData = await User.findOne({_id:req.session.user._id})
+        const userId = req.session.user;
+        const userData = await User.findOne({_id:userId})
         const wallets = await Wallet.find({ userId }).sort({ createdAt: -1 }).lean()
         wallets.forEach(element => {
             const day = String(element.createdAt.getDate()).padStart(2, 0);
@@ -13,7 +13,7 @@ const getWallet = async (req, res) => {
             const year = element.createdAt.getFullYear();
             const formattedDate = `${day}-${month}-${year}`;
             element.formattedCreatedAt = formattedDate
-        })
+        }) 
         const sumOfcredit = wallets.reduce((sum, element) => {
             if (element.type == "Credit") {
                 sum += element.amount

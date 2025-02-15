@@ -1,25 +1,53 @@
 <%- include("../partials/admin/header") %>
 
+<style>
+    .filter-container {
+        background: #fff;
+        padding: 5px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: fit-content;
+        margin-left: auto;
+        margin-bottom: 15px;
+    }
+
+    .select-filter {
+        width: auto !important;
+        min-width: 120px;
+        height: 30px;
+        font-size: 14px;
+}
+</style>
+
 <!-- Tailwind CSS CDN -->
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="container mx-auto px-4 py-8 mt-16">
+    <div class="filter-container">
+        <select class="form-select select-filter" aria-label="Filter by" id="filter-data" onchange="filterData(this.value)">
+            <option value="default">Default</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+        </select>
+    </div>
   <!-- Summary Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-white p-6 rounded-lg shadow">
-      <h3 class="text-gray-500 text-sm font-medium">Total Revenue</h3>
-      <p class="text-2xl font-bold">
-        ₹<%= typeof totalRevenue === 'number' ? totalRevenue.toLocaleString() : "0" %>
-      </p>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow">
-      <h3 class="text-gray-500 text-sm font-medium">Total Sales</h3>
-      <p class="text-2xl font-bold">
-        <%= typeof salesData === 'number' ? salesData.toLocaleString() : "0" %>
-      </p>
-    </div>
+        <h3 class="text-gray-500 text-sm font-medium">Total Revenue</h3>
+        <p class="text-2xl font-bold" id="total-revenue"> <!-- Add ID here -->
+          ₹<%= typeof totalRevenue === 'number' ? totalRevenue.toLocaleString() : "0" %>
+        </p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-gray-500 text-sm font-medium">Total Sales</h3>
+        <p class="text-2xl font-bold" id="total-sales"> <!-- Add ID here -->
+          <%= typeof salesData === 'number' ? salesData.toLocaleString() : "0" %>
+        </p>
+      </div>
     <div class="bg-white p-6 rounded-lg shadow">
       <h3 class="text-gray-500 text-sm font-medium">Cancelled Orders</h3>
       <p class="text-2xl font-bold"><%= typeof cancelledCount !== 'undefined' ? cancelledCount : "0" %></p>
@@ -32,15 +60,15 @@
     </div>
   </div>
 
-  <!-- Charts Section -->
+  
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <!-- Top Products Chart -->
+    
     <div class="bg-white p-6 rounded-lg shadow">
       <h3 class="text-lg font-semibold mb-4">Top Products</h3>
       <canvas id="topProductsChart"></canvas>
     </div>
 
-    <!-- Top Categories Chart -->
+   
     <div class="bg-white p-6 rounded-lg shadow">
       <h3 class="text-lg font-semibold mb-4">Top Categories</h3>
       <canvas id="topCategoriesChart"></canvas>
@@ -51,21 +79,21 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
  
     <!-- New Users Chart -->
-    <div class="bg-white p-6 rounded-lg shadow">
+    <!-- <div class="bg-white p-6 rounded-lg shadow">
       <h3 class="text-lg font-semibold mb-4">New Users (Last 4 Days)</h3>
       <canvas id="newUsersChart"></canvas>
-    </div>
+    </div> -->
   </div>
 </div>
 
-<!-- Chart.js Scripts -->
+
 <script>
   // Top Products Chart
   const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
   const topProductsChart = new Chart(topProductsCtx, {
     type: 'bar',
     data: {
-      labels: '<%= JSON.stringify(productData.map(p => p.productName)) %>',
+      labels: '<%= productData.map(p => p.productName) %>',
       datasets: [{
         label: 'Orders',
         data: '<%= JSON.stringify(productData.map(p => p.totalOrder)) %>',
@@ -86,9 +114,9 @@
   // Top Categories Chart
   const topCategoriesCtx = document.getElementById('topCategoriesChart').getContext('2d');
   const topCategoriesChart = new Chart(topCategoriesCtx, {
-    type: 'doughnut',
+    type: 'bar',
     data: {
-      labels: '<%= JSON.stringify(categoryData.map(c => c.categoryName)) %>',
+      labels: '<%= categoryData.map(c => c.categoryName) %>',
       datasets: [{
         label: 'Orders',
         data: '<%= JSON.stringify(categoryData.map(c => c.totalOrder)) %>',
@@ -109,28 +137,41 @@
     }
   });
 
-  // New Users Chart
-  const newUsersCtx = document.getElementById('newUsersChart').getContext('2d');
-  const newUsersChart = new Chart(newUsersCtx, {
-    type: 'line',
-    data: {
-      labels: '<%= JSON.stringify(userData.map(u => new Date(u.date).toLocaleDateString())) %>',
-      datasets: [{
-        label: 'New Users',
-        data: '<%= JSON.stringify(userData.map(u => u.count)) %>',
-        backgroundColor: 'rgba(255, 159, 64, 0.5)',
-        borderColor: 'rgba(255, 159, 64, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
+  async function filterData(filterValue) {
+    try {
+        const response = await fetch(`http://localhost:3000/admin/filter?filter=${filterValue}`);
+        const data = await response.json();
+
+        // Update summary cards
+        document.getElementById('total-revenue').textContent = 
+            '₹' + data.totalRevenue.toLocaleString('en-IN');
+        document.getElementById('total-sales').textContent = 
+            data.salesData.toLocaleString('en-IN');
+        document.getElementById('cancelled-orders').textContent = 
+            data.cancelledCount.toLocaleString('en-IN');
+        document.getElementById('new-users').textContent = 
+            data.newUsersCount.toLocaleString('en-IN');
+
+        // Update charts
+        topProductsChart.data.labels = data.productData.map(p => p.productName);
+        topProductsChart.data.datasets[0].data = data.productData.map(p => p.totalOrder);
+        topProductsChart.update();
+
+        // Repeat for other charts
+    } catch (error) {
+        console.error('Filter error:', error);
     }
-  });
+}
+
+function updateChart(chart, labels, data) {
+    if (chart) {
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = data;
+        chart.update();
+    }
+}
+
+
 </script>
 
 <%- include("../partials/admin/footer") %>
