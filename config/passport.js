@@ -6,7 +6,7 @@ const env = require("dotenv").config();
 passport.use(new GoogleStrategy({
     clientID:process.env.GOOGLE_CLIENT_ID ,
     clientSecret:process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL:'https://webapp.ajmamhd.site/auth/google/callback'
+    callbackURL:'https://webapp.ajmalmhd.site/auth/google/callback'
 },
 
 
