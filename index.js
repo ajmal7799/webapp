@@ -5,10 +5,10 @@ const session = require("express-session");
 const passport = require("./config/passport")
 const Razorpay = require("razorpay");
 const env = require("dotenv").config();
-const db = require("./config/db")
+const db = require("./config/db");
 const flash = require('connect-flash');
-const userRouter = require("./routes/userRouter")
-const adminRouter = require("./routes/adminRouter")
+const userRouter = require("./routes/userRouter");
+const adminRouter = require("./routes/adminRouter");
 db()
 
 app.use(flash());
